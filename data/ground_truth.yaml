@@ -1,0 +1,181 @@
+# Ground truth: known past trends with approximate takeoff dates (plan item 9).
+# Used to calibrate anomaly thresholds (item 22) and for full backtesting (item 46).
+# Expand to 30+ in week 4 (item 23).
+#
+# Fields:
+#   takeoff    — approx month early signals appeared (what the system should catch)
+#   mainstream — approx month the trend was widely known (catching it here = too late)
+#   outcome    — real (sustained) | hype (spike and die) | seasonal-spike
+#   success = system flags the trend between takeoff and mainstream.
+
+trends:
+  - name: stanley-cup-tumbler
+    category: consumer-products
+    aliases: [stanley cup, stanley tumbler, stanley quencher]
+    takeoff: 2023-10
+    mainstream: 2023-12
+    outcome: real
+    tickers: []            # Stanley (PMI Worldwide) is private
+    notes: TikTok car-fire video accelerated an already-building trend
+
+  - name: pickleball
+    category: wellness
+    aliases: [pickleball paddle, pickleball court]
+    takeoff: 2021-06
+    mainstream: 2022-08
+    outcome: real
+    tickers: [DKS]
+
+  - name: air-fryer
+    category: home
+    aliases: [airfryer, air frier]
+    takeoff: 2018-11
+    mainstream: 2020-12
+    outcome: real
+    tickers: [SN]          # SharkNinja (listed 2023)
+
+  - name: dubai-chocolate
+    category: food-beverage
+    aliases: [dubai chocolate bar, pistachio kunafa chocolate, fix chocolate]
+    takeoff: 2024-02
+    mainstream: 2024-10
+    outcome: real
+    tickers: []
+    notes: Fix Dessert Chocolatier viral on TikTok; majors launched copies
+
+  - name: glp1-weight-loss
+    category: wellness
+    aliases: [ozempic, wegovy, semaglutide, mounjaro, zepbound]
+    takeoff: 2022-09
+    mainstream: 2023-06
+    outcome: real
+    tickers: [NVO, LLY]
+    notes: also a strong NEGATIVE signal for snack/food stocks
+
+  - name: prime-hydration
+    category: food-beverage
+    aliases: [prime drink, prime energy]
+    takeoff: 2022-01
+    mainstream: 2023-01
+    outcome: hype
+    tickers: []
+    notes: creator-driven (KSI/Logan Paul); peaked 2023 then sharp decline
+
+  - name: grimace-shake
+    category: food-beverage
+    aliases: [grimace birthday shake]
+    takeoff: 2023-06
+    mainstream: 2023-06
+    outcome: hype
+    tickers: [MCD]
+    notes: meme trend, lifespan of weeks — good test for spike-and-die detection
+
+  - name: owala-freesip
+    category: consumer-products
+    aliases: [owala, owala water bottle]
+    takeoff: 2024-01
+    mainstream: 2024-12
+    outcome: real
+    tickers: []
+    notes: successor wave to Stanley in drinkware
+
+  - name: butter-board
+    category: food-beverage
+    aliases: [butter boards]
+    takeoff: 2022-09
+    mainstream: 2022-10
+    outcome: hype
+    tickers: []
+    notes: died within ~3 months — classic hype benchmark
+
+  - name: fidget-spinner
+    category: toys
+    aliases: [fidget spinners, hand spinner]
+    takeoff: 2017-02
+    mainstream: 2017-05
+    outcome: hype
+    tickers: []
+    notes: the canonical spike-and-die product trend
+
+  - name: squishmallows
+    category: toys
+    aliases: [squishmallow]
+    takeoff: 2020-11
+    mainstream: 2021-12
+    outcome: real
+    tickers: []            # Jazwares, acquired by Berkshire Hathaway
+
+  - name: claw-clips
+    category: fashion
+    aliases: [claw clip, hair claw]
+    takeoff: 2021-03
+    mainstream: 2022-06
+    outcome: real
+    tickers: []
+
+  - name: cold-plunge
+    category: wellness
+    aliases: [ice bath, cold plunge tub, cold exposure]
+    takeoff: 2022-10
+    mainstream: 2023-06
+    outcome: real
+    tickers: []
+
+  - name: mushroom-coffee
+    category: food-beverage
+    aliases: [ryze coffee, lions mane coffee, functional mushrooms]
+    takeoff: 2023-01
+    mainstream: 2024-03
+    outcome: real
+    tickers: []
+
+  - name: sourdough
+    category: food-beverage
+    aliases: [sourdough starter, sourdough bread]
+    takeoff: 2020-03
+    mainstream: 2020-04
+    outcome: seasonal-spike
+    tickers: []
+    notes: COVID lockdown spike then decline — tests external-shock handling
+
+  - name: crocs-revival
+    category: fashion
+    aliases: [crocs, croc charms, jibbitz]
+    takeoff: 2020-05
+    mainstream: 2021-06
+    outcome: real
+    tickers: [CROX]
+
+  - name: labubu
+    category: toys
+    aliases: [labubu doll, pop mart labubu, the monsters labubu]
+    takeoff: 2024-04
+    mainstream: 2025-05
+    outcome: real
+    tickers: []            # Pop Mart 9992.HK — non-US, note for investment mapping
+    notes: long runway between Asia takeoff and Western mainstream
+
+  - name: celsius-energy
+    category: food-beverage
+    aliases: [celsius drink, celsius energy drink]
+    takeoff: 2022-06
+    mainstream: 2023-08
+    outcome: real
+    tickers: [CELH]
+    notes: clean case of trend → direct pure-play ticker
+
+  - name: tinned-fish
+    category: food-beverage
+    aliases: [tinned fish date night, canned fish, fishwife]
+    takeoff: 2022-07
+    mainstream: 2023-05
+    outcome: real
+    tickers: []
+
+  - name: sea-moss
+    category: wellness
+    aliases: [sea moss gel, irish moss]
+    takeoff: 2020-08
+    mainstream: 2021-04
+    outcome: real
+    tickers: []

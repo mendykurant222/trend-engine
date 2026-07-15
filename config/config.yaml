@@ -1,0 +1,81 @@
+# Trend Engine — central config (plan item 2)
+
+budget:
+  monthly_total_usd: 300          # whole system: data APIs + Claude + infra (plan item 11)
+  monthly_claude_usd: 100         # plan item 28
+  alert_at_pct: 80                # warn in daily summary when projected spend crosses this
+
+categories:
+  - consumer-products
+  - gaming
+  - fashion
+  - home
+  - gadgets
+  - food-beverage
+  - wellness
+  - toys
+
+sources:
+  reddit:
+    enabled: true
+    # Phase 1 starter list — expand toward 100-200 (plan item 13)
+    subreddits:
+      - BuyItForLife
+      - gadgets
+      - kitchenconfidential
+      - Cooking
+      - malefashionadvice
+      - femalefashionadvice
+      - SkincareAddiction
+      - HomeImprovement
+      - gaming
+      - boardgames
+      - fitness
+      - Supplements
+      - Coffee
+      - tea
+      - EatCheapAndHealthy
+      - shutupandtakemymoney
+      - INEEEEDIT
+      - ProductPorn
+    listing: hot                  # hot | top | rising
+    posts_per_subreddit: 50
+
+  google_trends:
+    enabled: false                # enable once SERPAPI_KEY is set
+    provider: serpapi             # paid API is the PRIMARY path — pytrends dropped (plan item 12)
+    anchor_query: "weather"       # fixed anchor for cross-day normalization
+    cost_per_search_usd: 0.01
+    seed_queries:                 # category seeds for rising-queries discovery
+      - "kitchen gadget"
+      - "viral product"
+      - "tiktok made me buy it"
+      - "home decor trend"
+      - "skincare trend"
+
+  amazon:
+    enabled: false                # enable once KEEPA_KEY is set
+    provider: keepa
+    domain: 1                     # 1 = amazon.com
+    categories: []                # Keepa category node ids; fill in Phase 1
+    cost_per_token_usd: 0.0005
+
+  tiktok:
+    enabled: false                # enable once APIFY_TOKEN is set
+    provider: apify
+    actor_id: ""                  # Apify actor for TikTok Creative Center; pick in Phase 1
+    cost_per_run_usd: 0.10
+
+signals:
+  min_mentions_threshold: 3       # entity must clear this before entering anomaly math (plan item 17)
+
+anomalies:
+  poisson_p_threshold: 0.001      # plan item 20 — Poisson tail probability, not naive z-score
+  cross_source_window_days: 14    # plan item 21
+  new_entity_min_mentions: 5
+  new_entity_min_sources: 2
+
+reports:
+  email_to: mkurant@bkonect.com
+  telegram_enabled: false         # enable once TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID are set
+  language: he-summary-en-detail  # plan item 33
