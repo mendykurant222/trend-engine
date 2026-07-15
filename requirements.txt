@@ -3,3 +3,4 @@ anthropic>=0.90
 psycopg[binary]>=3.2
 PyYAML>=6.0
 python-dotenv>=1.0
+Flask>=3.0

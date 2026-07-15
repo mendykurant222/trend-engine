@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>🪦 Graveyard</h1>
+<p class="muted">Trends that died — what was real and what was hype.</p>
+<div class="card">
+  {% if trends %}
+  <table>
+    <tr><th>Trend</th><th>Last stage</th><th>Peak strength</th><th>Entities</th><th>Lifespan</th></tr>
+    {% for t in trends %}
+    <tr>
+      <td><a href="{{ url_for('trend', tid=t[0]) }}"><b>{{ t[1] }}</b></a><br><span class="muted small">{{ t[2] }}</span></td>
+      <td><span class="chip" style="--sc:{{ stage_colors.get(t[3], '#888') }}">{{ t[3] }}</span></td>
+      <td class="mono">{{ t[4] }}</td>
+      <td class="mono">{{ t[10] }}</td>
+      <td class="mono small">{{ t[6] }} → {{ t[7] }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <div class="empty">Nothing here yet — no trend has died. That changes; hype always does.</div>
+  {% endif %}
+</div>
+{% endblock %}

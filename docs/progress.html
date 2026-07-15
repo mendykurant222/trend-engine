@@ -104,7 +104,7 @@
 <div class="wrap">
   <header>
     <h1>📈 Trend Engine — Progress Tracker</h1>
-    <p class="sub">Updated <b>15.07.2026 (night)</b> · <b>4 sources live</b>: Google Trends, TikTok, SEC EDGAR, GDELT · DB: Neon · Reports: Telegram · Month spend: <b class="mono">$0.30</b></p>
+    <p class="sub">Updated <b>15.07.2026 (night)</b> · <b>4 sources live</b> · <b>Dashboard live</b> (localhost:5601) · DB: Neon · Reports: Telegram · Month spend: <b class="mono">$0.30</b></p>
   </header>
 
   <section class="summary" aria-label="Overall summary">
@@ -219,11 +219,16 @@ const ITEMS = [
   { n:39, p:5, t:"Instagram via third party", d:"Budget-dependent — not critical", s:"todo" },
   { n:40, p:5, t:"Per-source reliability weight", d:"In the overall score", s:"todo" },
 
-  { n:41, p:6, t:"Dashboard web app", d:"Live trends + per-trend page with charts, entities, companies, and drill-down to the raw items", s:"todo" },
-  { n:42, p:6, t:"Search and filters", d:"Category, stage, strength, confidence", s:"todo" },
-  { n:43, p:6, t:"Personal watchlist", d:"With boosted alerts", s:"todo" },
-  { n:44, p:6, t:"Graveyard page", d:"Dead trends — learn what was real vs hype", s:"todo" },
-  { n:45, p:6, t:"Simple access protection", d:"Single user — no multi-tenancy", s:"todo" },
+  { n:41, p:6, t:"Dashboard web app", d:"Live trends + per-trend page with charts, entities, companies, and drill-down to the raw items", s:"tested",
+    note:"Flask app (python -m dashboard.app, port 5601): trend list, lifecycle chart, per-source sparklines, evidence + raw-item drill-down. Local for now; goes remote with the VPS (item 34)" },
+  { n:42, p:6, t:"Search and filters", d:"Category, stage, strength, confidence", s:"tested",
+    note:"Name search + category/stage dropdowns + min strength/confidence + watchlist-only" },
+  { n:43, p:6, t:"Personal watchlist", d:"With boosted alerts", s:"tested",
+    note:"Star toggle on any trend; watched trends alert from score 60 instead of 90 — verified both tiers fire correctly" },
+  { n:44, p:6, t:"Graveyard page", d:"Dead trends — learn what was real vs hype", s:"tested",
+    note:"Lists dead trends with peak strength and lifespan" },
+  { n:45, p:6, t:"Simple access protection", d:"Single user — no multi-tenancy", s:"tested",
+    note:"Password login (DASHBOARD_PASSWORD in .env) + session cookie; every page guarded" },
 
   { n:46, p:7, t:"Full backtesting", d:"Against the expanded ground truth; final threshold calibration", s:"todo",
     w:"Backfill (item 10)" },

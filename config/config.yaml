@@ -102,3 +102,4 @@ reports:
 
 alerts:                           # plan item 31 — deliberately high threshold
   min_score: 90                   # only cross-source surges at/above this alert
+  watchlist_min_score: 60         # plan item 43 — watched trends alert earlier

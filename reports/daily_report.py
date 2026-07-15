@@ -96,22 +96,31 @@ def log_reported(conn, cluster_ids: list[int], target_date: date | None = None) 
 
 
 def check_alerts(conn, config: dict, target_date: date | None = None) -> list[str]:
-    """Extreme cross-source surges only — deliberately high bar (plan item 31)."""
+    """Extreme cross-source surges (plan item 31), plus a lower bar for
+    entities in WATCHED trends (plan item 43)."""
     target_date = target_date or date.today()
     min_score = config.get("alerts", {}).get("min_score", 90)
+    watch_min = config.get("alerts", {}).get("watchlist_min_score", 60)
     rows = conn.execute(
-        """select e.canonical_name, a.source, a.kind, a.score, a.details
+        """select e.canonical_name, a.source, a.kind, a.score, a.details,
+                  exists (select 1 from trend_cluster_entities tce
+                          join trend_clusters t on t.id = tce.cluster_id
+                          where tce.entity_id = e.id and t.watched) as watched
            from anomalies a join entities e on e.id = a.entity_id
-           where a.signal_date = %s and a.score >= %s
-             and a.details @> '{"cross_source": true}'::jsonb
-           order by a.score desc limit 5""",
-        (target_date, min_score),
+           where a.signal_date = %s
+           order by a.score desc limit 50""",
+        (target_date,),
     ).fetchall()
     alerts = []
-    for name, source, kind, score, details in rows:
+    for name, source, kind, score, details, watched in rows[:20]:
+        cross = details.get("cross_source")
+        fires = (cross and score >= min_score) or (watched and score >= watch_min)
+        if not fires or len(alerts) >= 5:
+            continue
+        tag = "⭐ watchlist" if (watched and not (cross and score >= min_score)) else "cross-source"
         alerts.append(
             f"🚨 <b>Trend Alert: {esc(name)}</b>\n"
-            f"Cross-source {esc(kind)} — score {score:.0f} ({esc(source)})\n"
+            f"{tag} {esc(kind)} — score {score:.0f} ({esc(source)})\n"
             f"today {details.get('today', '?')} vs baseline {details.get('baseline_mean', '?')}")
     return alerts
 

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ title }} — Trend Engine</title>
+<style>
+  :root {
+    --bg:#F4F6F7; --surface:#FFFFFF; --ink:#182226; --muted:#5B6B70;
+    --line:#DCE3E5; --accent:#0E7C66; --warn:#B77817; --watch:#5B5BD6;
+    --shadow:0 1px 2px rgba(24,34,38,.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0F1618; --surface:#172124; --ink:#E4EBE9; --muted:#90A3A6;
+            --line:#243235; --accent:#38B79C; --warn:#D99A3D; --watch:#8D8DF0; --shadow:none; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+         font:15px/1.5 -apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif; }
+  .mono { font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums; }
+  a { color:var(--accent); text-decoration:none; }
+  a:hover { text-decoration:underline; }
+  .wrap { max-width:1000px; margin:0 auto; padding:24px 20px 70px; }
+  nav { display:flex; align-items:center; gap:18px; margin-bottom:22px; font-size:.9rem; }
+  nav .brand { font-weight:700; font-size:1.05rem; color:var(--ink); }
+  nav .sp { flex:1; }
+  nav a.active { font-weight:600; }
+  .card { background:var(--surface); border:1px solid var(--line); border-radius:10px;
+          box-shadow:var(--shadow); padding:16px 18px; margin-bottom:18px; }
+  .muted { color:var(--muted); }
+  .small { font-size:.8rem; }
+  h1 { font-size:1.3rem; margin:0 0 4px; }
+  h2 { font-size:1.02rem; margin:22px 0 8px; }
+  table { border-collapse:collapse; width:100%; font-size:.88rem; }
+  th { text-align:left; color:var(--muted); font-weight:600; font-size:.78rem;
+       text-transform:uppercase; letter-spacing:.04em; padding:6px 10px; border-bottom:1px solid var(--line); }
+  td { padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  tr:last-child td { border-bottom:0; }
+  .chip { display:inline-block; font-size:.75rem; font-weight:600; border-radius:999px;
+          padding:2px 9px; color:var(--sc,#888); background:color-mix(in srgb, var(--sc,#888) 14%, transparent); }
+  .bignum { font-size:1.5rem; font-weight:700; color:var(--accent); }
+  .statrow { display:flex; gap:26px; flex-wrap:wrap; }
+  .statrow .lbl { color:var(--muted); font-size:.78rem; }
+  form.filters { display:flex; gap:10px; flex-wrap:wrap; align-items:end; }
+  form.filters label { display:flex; flex-direction:column; gap:3px; font-size:.75rem; color:var(--muted); }
+  input, select { font:inherit; color:var(--ink); background:var(--bg);
+                  border:1px solid var(--line); border-radius:7px; padding:6px 9px; }
+  input:focus-visible, select:focus-visible, button:focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
+  button { font:inherit; cursor:pointer; border:1px solid var(--line); background:var(--surface);
+           color:var(--ink); border-radius:7px; padding:6px 12px; }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .star { font-size:1rem; background:none; border:none; padding:2px 6px; }
+  .star.on { color:var(--watch); }
+  .chart { display:block; }
+  .axis { font-size:10px; fill:var(--muted); }
+  .empty { text-align:center; color:var(--muted); padding:38px 0; }
+  svg polyline, svg circle { color:var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <span class="brand">📈 Trend Engine</span>
+    <a href="{{ url_for('index') }}" class="{{ 'active' if request.endpoint == 'index' }}">Trends</a>
+    <a href="{{ url_for('graveyard') }}" class="{{ 'active' if request.endpoint == 'graveyard' }}">Graveyard</a>
+    <span class="sp"></span>
+    <a href="{{ url_for('logout') }}" class="muted">Log out</a>
+  </nav>
+  {% block content %}{% endblock %}
+</div>
+</body>
+</html>

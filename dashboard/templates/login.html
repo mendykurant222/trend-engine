@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Log in — Trend Engine</title>
+<style>
+  :root { --bg:#F4F6F7; --surface:#fff; --ink:#182226; --line:#DCE3E5; --accent:#0E7C66; --muted:#5B6B70; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0F1618; --surface:#172124; --ink:#E4EBE9; --line:#243235; --accent:#38B79C; --muted:#90A3A6; }
+  }
+  body { margin:0; min-height:100vh; display:grid; place-items:center; background:var(--bg);
+         color:var(--ink); font:15px/1.5 -apple-system,"Segoe UI",Arial,sans-serif; }
+  form { background:var(--surface); border:1px solid var(--line); border-radius:12px;
+         padding:30px 32px; width:min(92vw, 330px); display:flex; flex-direction:column; gap:12px; }
+  h1 { font-size:1.1rem; margin:0; }
+  input { font:inherit; color:var(--ink); background:var(--bg); border:1px solid var(--line);
+          border-radius:7px; padding:9px 11px; }
+  button { font:inherit; font-weight:600; background:var(--accent); color:#fff; border:none;
+           border-radius:7px; padding:9px; cursor:pointer; }
+  .err { color:#C43D3D; font-size:.85rem; margin:0; }
+</style>
+</head>
+<body>
+  <form method="post">
+    <h1>📈 Trend Engine</h1>
+    {% if error %}<p class="err">{{ error }}</p>{% endif %}
+    <input type="password" name="password" placeholder="Password" autofocus autocomplete="current-password">
+    <button type="submit">Log in</button>
+  </form>
+</body>
+</html>

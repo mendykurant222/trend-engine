@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <div class="statrow">
+    <div><div class="bignum mono">{{ stats[0] }}</div><div class="lbl">active trends</div></div>
+    <div><div class="bignum mono">{{ stats[1] }}</div><div class="lbl">entities tracked</div></div>
+    <div><div class="bignum mono">{{ stats[2] }}</div><div class="lbl">raw items collected</div></div>
+    <div><div class="bignum mono">${{ '%.2f' % stats[3] }}</div><div class="lbl">month spend</div></div>
+  </div>
+</div>
+
+<div class="card">
+  <form class="filters" method="get">
+    <label>Search <input name="q" value="{{ args.get('q','') }}" placeholder="trend name"></label>
+    <label>Category
+      <select name="category">
+        <option value="">all</option>
+        {% for c in categories %}<option value="{{ c }}" {{ 'selected' if args.get('category')==c }}>{{ c }}</option>{% endfor %}
+      </select></label>
+    <label>Stage
+      <select name="stage">
+        <option value="">all</option>
+        {% for s in ['emerging','accelerating','peak','declining'] %}
+          <option value="{{ s }}" {{ 'selected' if args.get('stage')==s }}>{{ s }}</option>{% endfor %}
+      </select></label>
+    <label>Min strength <input name="min_strength" type="number" min="0" max="100" value="{{ args.get('min_strength','') }}" style="width:76px"></label>
+    <label>Min confidence <input name="min_confidence" type="number" min="0" max="100" value="{{ args.get('min_confidence','') }}" style="width:76px"></label>
+    <label>⭐ <select name="watched"><option value="">all</option><option value="1" {{ 'selected' if args.get('watched')=='1' }}>watchlist</option></select></label>
+    <button class="primary" type="submit">Filter</button>
+  </form>
+</div>
+
+<div class="card">
+  {% if trends %}
+  <table>
+    <tr><th></th><th>Trend</th><th>Stage</th><th>Strength</th><th>Confidence</th><th>Entities</th><th>Tickers</th><th>Age</th></tr>
+    {% for t in trends %}
+    <tr>
+      <td>
+        <form method="post" action="{{ url_for('toggle_watch', tid=t[0]) }}">
+          <button class="star {{ 'on' if t[8] }}" title="Toggle watchlist">{{ '★' if t[8] else '☆' }}</button>
+        </form>
+      </td>
+      <td><a href="{{ url_for('trend', tid=t[0]) }}"><b>{{ t[1] }}</b></a><br><span class="muted small">{{ t[2] }}</span></td>
+      <td><span class="chip" style="--sc:{{ stage_colors.get(t[3], '#888') }}">{{ t[3] }}</span></td>
+      <td class="mono">{{ t[4] }}</td>
+      <td class="mono">{{ t[5] }}</td>
+      <td class="mono">{{ t[10] }}</td>
+      <td class="mono small">{{ t[9] or '—' }}</td>
+      <td class="mono small">{{ (t[7] - t[6]).days + 1 }}d</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <div class="empty">No trends match. The engine adds trends as anomalies cluster — check back after a few daily runs.</div>
+  {% endif %}
+</div>
+{% endblock %}

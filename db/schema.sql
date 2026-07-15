@@ -91,6 +91,9 @@ create table if not exists trend_clusters (
     created_at     timestamptz not null default now()
 );
 
+-- personal watchlist flag (plan item 43) — watched trends get boosted alerts
+alter table trend_clusters add column if not exists watched boolean not null default false;
+
 create table if not exists trend_cluster_entities (
     cluster_id bigint not null references trend_clusters(id),
     entity_id  bigint not null references entities(id),

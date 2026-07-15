@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="display:flex; align-items:baseline; gap:12px; flex-wrap:wrap;">
+  <h1>{{ t.name }}</h1>
+  <span class="chip" style="--sc:{{ stage_colors.get(t.stage, '#888') }}">{{ t.stage }}</span>
+  {% if t.status != 'active' %}<span class="chip" style="--sc:#9AA7AB">dead</span>{% endif %}
+  <form method="post" action="{{ url_for('toggle_watch', tid=t.id) }}">
+    <button class="star {{ 'on' if t.watched }}">{{ '★ watching' if t.watched else '☆ watch' }}</button>
+  </form>
+</div>
+<p class="muted small">{{ t.category }} · first detected {{ t.first_detected }} · last updated {{ t.last_updated }}</p>
+
+<div class="card">
+  <div class="statrow">
+    <div><div class="bignum mono">{{ t.strength }}</div><div class="lbl">strength</div></div>
+    <div><div class="bignum mono">{{ t.confidence }}</div><div class="lbl">confidence</div></div>
+    <div><div class="bignum mono">{{ (t.last_updated - t.first_detected).days + 1 }}d</div><div class="lbl">age</div></div>
+  </div>
+</div>
+
+<h2>Lifecycle</h2>
+<div class="card">{{ chart }}</div>
+
+<h2>Entities ({{ entities|length }})</h2>
+<div class="card">
+  <table>
+    <tr><th>Entity</th><th>First seen</th><th>Signals by source (60d)</th></tr>
+    {% for e in entities %}
+    <tr>
+      <td><b>{{ e.name }}</b></td>
+      <td class="mono small">{{ e.first_seen }}</td>
+      <td>
+        {% for s in e.sources %}
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span class="mono small" style="width:96px">{{ s.source }}</span>
+            {{ s.spark }}
+            <span class="muted small mono">{{ '%.0f' % s.total }}</span>
+          </div>
+        {% else %}<span class="muted small">no signals yet</span>{% endfor %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+
+<h2>Companies</h2>
+<div class="card">
+  {% if companies %}
+  <table>
+    <tr><th>Ticker</th><th>Company</th><th>Exposure</th><th>Direction</th><th>Confidence</th><th>Material</th></tr>
+    {% for c in companies %}
+    <tr>
+      <td class="mono"><b>{{ c[0] }}</b></td>
+      <td>{{ c[1] }}</td>
+      <td>{{ c[2] }}</td>
+      <td>{{ '📈 positive' if c[3] == 'positive' else '📉 negative' }}</td>
+      <td class="mono">{{ c[4] }}</td>
+      <td>{{ '★' if c[5] else '' }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}<div class="empty">No verified ticker exposure mapped.</div>{% endif %}
+</div>
+
+<h2>Evidence — anomalies behind this trend</h2>
+<div class="card">
+  {% if evidence %}
+  <table>
+    <tr><th>Date</th><th>Entity</th><th>Source</th><th>Kind</th><th>Score</th><th>Detail</th></tr>
+    {% for ev in evidence %}
+    <tr>
+      <td class="mono small">{{ ev[0] }}</td>
+      <td>{{ ev[1] }}</td>
+      <td class="mono small">{{ ev[2] }}</td>
+      <td>{{ ev[3] }}{{ ' ×2' if ev[5].get('cross_source') }}</td>
+      <td class="mono">{{ '%.0f' % ev[4] }}</td>
+      <td class="muted small">
+        {% if ev[3] == 'surge' %}{{ ev[5].get('today') }} vs baseline {{ ev[5].get('baseline_mean') }}
+        {% elif ev[3] == 'acceleration' %}velocity {{ ev[5].get('velocity_prev') }}→{{ ev[5].get('velocity_now') }}/day
+        {% else %}{{ ev[5].get('mentions_in_window') }} mentions, {{ ev[5].get('sources')|length }} sources{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}<div class="empty">No evidence rows.</div>{% endif %}
+</div>
+
+<h2>Raw items — drill down to the source</h2>
+<div class="card">
+  {% if raw_items %}
+  <table>
+    <tr><th>Date</th><th>Source</th><th>Item</th></tr>
+    {% for r in raw_items %}
+    <tr>
+      <td class="mono small">{{ r.date or '—' }}</td>
+      <td class="mono small">{{ r.source }}</td>
+      <td>{% if r.url %}<a href="{{ r.url }}" target="_blank" rel="noopener">{{ r.text }}</a>{% else %}{{ r.text }}{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}<div class="empty">No raw items linked yet.</div>{% endif %}
+</div>
+{% endblock %}
