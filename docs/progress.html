@@ -61,6 +61,26 @@
   .chip[aria-pressed="true"] { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
   .chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
+  .flow { background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+          padding: 18px 20px; box-shadow: var(--shadow); margin-bottom: 30px; }
+  .flow h2 { font-size: 1.1rem; margin: 0 0 4px; }
+  .flow > p { color: var(--muted); font-size: .85rem; margin: 0 0 14px; }
+  .steps { display: grid; gap: 0; }
+  .step { display: grid; grid-template-columns: 44px 1fr; gap: 0 14px; position: relative;
+          padding-bottom: 18px; }
+  .step::before { content: ""; position: absolute; left: 21px; top: 34px; bottom: 2px;
+                  width: 2px; background: var(--line); }
+  .step:last-child::before { display: none; }
+  .step .bubble { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center;
+                  background: color-mix(in srgb, var(--accent) 12%, transparent);
+                  color: var(--accent); font-weight: 700; margin-left: 5px; }
+  .step h3 { font-size: .95rem; margin: 5px 0 3px; }
+  .step .what { font-size: .88rem; margin: 0 0 3px; }
+  .step .how { font-size: .8rem; color: var(--muted); margin: 0; }
+  .step .how b { color: var(--ink); font-weight: 600; }
+  .flow .takeaway { border-top: 1px solid var(--line); margin-top: 4px; padding-top: 12px;
+                    font-size: .85rem; }
+
   .phase { margin-bottom: 26px; }
   .phase-head { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
   .phase-head h2 { font-size: 1.02rem; margin: 0; }
@@ -104,7 +124,7 @@
 <div class="wrap">
   <header>
     <h1>📈 Trend Engine — Progress Tracker</h1>
-    <p class="sub">Updated <b>15.07.2026 (night)</b> · <b>4 sources live</b> · <b>Dashboard live</b> (localhost:5601) · DB: Neon · Reports: Telegram · Month spend: <b class="mono">$0.30</b></p>
+    <p class="sub">Updated <b>15.07.2026 (night)</b> · <b>4 sources live</b> · <b>Dashboard: <a href="https://trend-engine-dashboard.vercel.app">trend-engine-dashboard.vercel.app</a></b> · DB: Neon · Reports: Telegram · Month spend: <b class="mono">$0.30</b></p>
   </header>
 
   <section class="summary" aria-label="Overall summary">
@@ -114,6 +134,54 @@
     </div>
     <div class="bar" id="bar" role="img" aria-label="Status distribution"></div>
     <div class="chips" id="chips" role="group" aria-label="Filter by status"></div>
+  </section>
+
+  <section class="card flow" aria-label="How the engine works">
+    <h2>⚙️ How the engine works — end to end</h2>
+    <p>The daily pipeline, from raw internet chatter to an investable insight. Fully automated; every step below is built and running.</p>
+    <div class="steps">
+      <div class="step"><div class="bubble">1</div><div>
+        <h3>Collect</h3>
+        <p class="what">Six independent collectors pull raw consumer signals every day: TikTok Creative Center trends, Google rising searches, Reddit communities, Amazon best-sellers, worldwide news volume, and SEC filings.</p>
+        <p class="how"><b>Under the hood:</b> everything is stored raw with hash de-duplication, so history can always be re-analyzed. A failing source never stops the run.</p>
+      </div></div>
+      <div class="step"><div class="bubble">2</div><div>
+        <h3>Identify entities</h3>
+        <p class="what">AI reads every new item and names the specific products, brands, and micro-trends inside ("stanley tumbler", "labubu", "dubai chocolate") — while filtering generic noise.</p>
+        <p class="how"><b>Under the hood:</b> Claude Haiku in batches (~$0.001 per 25 items); spelling variants merge into one canonical entity, and every merge is reversible.</p>
+      </div></div>
+      <div class="step"><div class="bubble">3</div><div>
+        <h3>Build daily signals</h3>
+        <p class="what">Each entity gets a daily score per source: how often it's mentioned, how much engagement it gets, how much news covers it.</p>
+        <p class="how"><b>Under the hood:</b> pure SQL, idempotent — any day can be recomputed. The news source arrives with ~90 days of history built in.</p>
+      </div></div>
+      <div class="step"><div class="bubble">4</div><div>
+        <h3>Detect anomalies</h3>
+        <p class="what">Statistics — not AI — decide what moved unusually today: sudden spikes vs seasonal baselines, week-over-week acceleration, and brand-new entities appearing across multiple platforms at once.</p>
+        <p class="how"><b>Under the hood:</b> Poisson probability (built for sparse counts), same-weekday baselines, and a ×2 score bonus when 2+ independent sources agree within 14 days — the strongest noise filter.</p>
+      </div></div>
+      <div class="step"><div class="bubble">5</div><div>
+        <h3>Cluster into trends</h3>
+        <p class="what">AI merges related anomalies into one named trend — a TikTok hashtag, an Amazon product spike, and a Reddit thread about the same thing become a single story with a stage (emerging → accelerating → peak → declining), a strength score, and a separate confidence score.</p>
+        <p class="how"><b>Under the hood:</b> Claude Sonnet with structured output; a deterministic "trend memory" updates existing trends by entity overlap so nothing gets double-counted day over day.</p>
+      </div></div>
+      <div class="step"><div class="bubble">6</div><div>
+        <h3>Map to stocks</h3>
+        <p class="what">Each trend is mapped to publicly traded companies exposed to it — manufacturer, retailer, or supplier; long or short — with a materiality flag (does this actually move the company's revenue?).</p>
+        <p class="how"><b>Under the hood:</b> AI proposes, but only tickers verified against the official SEC registry (10,428 companies) are ever stored — the model cannot invent a symbol.</p>
+      </div></div>
+      <div class="step"><div class="bubble">7</div><div>
+        <h3>Report, alert, self-grade</h3>
+        <p class="what">A daily Telegram report delivers the top trends with their tickers; extreme multi-source surges trigger instant alerts; and every Monday the engine grades its own past calls — what it flagged 14 and 30 days ago vs what happened.</p>
+        <p class="how"><b>Under the hood:</b> every reported trend is logged, so precision is measurable from week one. Watchlisted trends alert at a lower threshold.</p>
+      </div></div>
+      <div class="step"><div class="bubble">8</div><div>
+        <h3>Dashboard &amp; audit trail</h3>
+        <p class="what">A password-protected web dashboard shows every live trend with its full history — and drills down to the exact posts, searches, and filings behind it. No black box: every claim traces to a raw source item.</p>
+        <p class="how"><b>Under the hood:</b> every AI prompt, response, and cent of cost is logged to the database. Current all-in running cost: under $1/day.</p>
+      </div></div>
+    </div>
+    <p class="takeaway"><b>The thesis:</b> consumer trends surface on TikTok and Reddit weeks before they reach Amazon rankings, news, and earnings calls. This engine watches all of those layers simultaneously, scores the lag statistically, and turns it into named, graded, stock-mapped trends — automatically, every day.</p>
   </section>
 
   <main id="phases"></main>
@@ -209,7 +277,8 @@ const ITEMS = [
   { n:33, p:4, t:"Language", d:"Originally bilingual (Hebrew summary + English detail)", s:"done",
     note:"Changed 15.07 per Mendy's decision: everything English-only" },
 
-  { n:34, p:5, t:"Move to VPS + Docker", d:"$10–20/month — when runs outgrow GitHub Actions", s:"todo" },
+  { n:34, p:5, t:"Move to VPS + Docker", d:"$10–20/month — when runs outgrow GitHub Actions", s:"partial",
+    note:"Dashboard already remote: Vercel serverless at trend-engine-dashboard.vercel.app ($0). Collectors stay on GitHub Actions until they outgrow it — then a VPS takes both" },
   { n:35, p:5, t:"SEC EDGAR", d:"Free, official — trend mentions from company filings", s:"tested",
     note:"LIVE via full-text search (EDGAR has no call transcripts — filings instead, which also return the exact company + ticker). Test: pickleball → CaliberCos (CWD) 8-K found" },
   { n:36, p:5, t:"Research reports", d:"McKinsey, Gartner, CB Insights, ARK — auto-summarized into structured trends", s:"todo" },
@@ -220,7 +289,7 @@ const ITEMS = [
   { n:40, p:5, t:"Per-source reliability weight", d:"In the overall score", s:"todo" },
 
   { n:41, p:6, t:"Dashboard web app", d:"Live trends + per-trend page with charts, entities, companies, and drill-down to the raw items", s:"tested",
-    note:"Flask app (python -m dashboard.app, port 5601): trend list, lifecycle chart, per-source sparklines, evidence + raw-item drill-down. Local for now; goes remote with the VPS (item 34)" },
+    note:"LIVE at trend-engine-dashboard.vercel.app (Vercel serverless, $0): trend list, lifecycle chart, per-source sparklines, evidence + raw-item drill-down. Also runs locally (python -m dashboard.app)" },
   { n:42, p:6, t:"Search and filters", d:"Category, stage, strength, confidence", s:"tested",
     note:"Name search + category/stage dropdowns + min strength/confidence + watchlist-only" },
   { n:43, p:6, t:"Personal watchlist", d:"With boosted alerts", s:"tested",
