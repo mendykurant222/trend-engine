@@ -90,7 +90,8 @@ def main() -> int:
         print(daily, "\n")
         for needle, label in [("demo: solar pool lighting", "top trend"),
                               ("POOL", "ticker"), ("★", "material mark"),
-                              ("🇮🇱", "hebrew summary"), ("day 16", "trend age")]:
+                              ("active trends; strongest", "summary line"),
+                              ("day 16", "trend age")]:
             if needle not in daily:
                 failures.append(f"daily report missing {label} ({needle!r})")
         if len(reported) != 2:
@@ -107,7 +108,7 @@ def main() -> int:
         for needle, label in [("60→82", "performance delta"),
                               ("reported 14d ago", "14d grading"),
                               ("✅", "positive verdict"),
-                              ("סיכום שבועי", "hebrew summary")]:
+                              ("Week in review", "summary line")]:
             if needle not in weekly:
                 failures.append(f"weekly report missing {label} ({needle!r})")
 

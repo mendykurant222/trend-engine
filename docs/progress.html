@@ -1,6 +1,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>מנוע גילוי טרנדים — מעקב התקדמות</title>
+<title>Trend Engine — Progress Tracker</title>
 <style>
   :root {
     --bg: #F4F6F7; --surface: #FFFFFF; --ink: #182226; --muted: #5B6B70;
@@ -33,7 +33,6 @@
     --shadow: 0 1px 2px rgba(24,34,38,.05);
   }
   * { box-sizing: border-box; }
-  html { direction: rtl; }
   body {
     margin: 0; background: var(--bg); color: var(--ink);
     font: 15px/1.55 -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
@@ -73,7 +72,7 @@
 
   .items { background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
            box-shadow: var(--shadow); overflow: hidden; }
-  .item { display: grid; grid-template-columns: 44px 1fr 190px 118px;
+  .item { display: grid; grid-template-columns: 44px 1fr 200px 118px;
           gap: 6px 14px; padding: 11px 14px; border-top: 1px solid var(--line);
           align-items: start; }
   .item:first-child { border-top: 0; }
@@ -81,7 +80,7 @@
   .item .title { font-weight: 600; }
   .item .desc { color: var(--muted); font-size: .84rem; margin-top: 2px; }
   .item .note { font-size: .84rem; margin-top: 3px; color: var(--ink); }
-  .item .note::before { content: "↩ "; color: var(--accent); }
+  .item .note::before { content: "↳ "; color: var(--accent); }
   .item .wait { font-size: .82rem; color: var(--muted); padding-top: 2px; }
   .item .wait b { color: var(--ink); font-weight: 600; }
   .status { justify-self: start; font-size: .78rem; font-weight: 600; border-radius: 999px;
@@ -104,138 +103,142 @@
 
 <div class="wrap">
   <header>
-    <h1>📈 מנוע גילוי טרנדים — מעקב התקדמות</h1>
-    <p class="sub">עודכן <b>15.07.2026 (ערב)</b> · <b>2 מקורות חיים</b>: Google Trends + TikTok · DB: Neon · דיווח: Telegram · הוצאה החודש: <b class="mono">$0.17</b></p>
+    <h1>📈 Trend Engine — Progress Tracker</h1>
+    <p class="sub">Updated <b>15.07.2026 (evening)</b> · <b>2 sources live</b>: Google Trends + TikTok · DB: Neon · Reports: Telegram · Month spend: <b class="mono">$0.17</b></p>
   </header>
 
-  <section class="summary" aria-label="סיכום כללי">
+  <section class="summary" aria-label="Overall summary">
     <div class="totals">
       <span class="pct mono" id="pct"></span>
       <span class="lbl" id="pct-lbl"></span>
     </div>
-    <div class="bar" id="bar" role="img" aria-label="התפלגות סטטוסים"></div>
-    <div class="chips" id="chips" role="group" aria-label="סינון לפי סטטוס"></div>
+    <div class="bar" id="bar" role="img" aria-label="Status distribution"></div>
+    <div class="chips" id="chips" role="group" aria-label="Filter by status"></div>
   </section>
 
   <main id="phases"></main>
 
   <footer>
-    בסיס: התוכנית המוסכמת (51 סעיפים, ללא שלב המוצר — שימוש אישי בלבד). "בוצע ונבדק" = קוד + טסט אוטומטי/בדיקה חיה שעברו.
-    העמוד מתעדכן בכל סשן עבודה.
+    Based on the agreed plan (51 items; product phase removed — personal use only).
+    "Tested" = code plus a passing automated test or live verification. Updated every working session.
   </footer>
 </div>
 
 <script>
 const STATUSES = {
-  tested:  { label: "בוצע ונבדק", color: "var(--c-tested)",  weight: 1 },
-  done:    { label: "בוצע",       color: "var(--c-done)",    weight: 1 },
-  partial: { label: "חלקי",       color: "var(--c-partial)", weight: .5 },
-  key:     { label: "מחכה למנדי", color: "var(--c-key)",     weight: 0 },
-  ext:     { label: "גורם חיצוני", color: "var(--c-ext)",    weight: 0 },
-  todo:    { label: "טרם",        color: "var(--c-todo)",    weight: 0 },
+  tested:  { label: "Tested",          color: "var(--c-tested)",  weight: 1 },
+  done:    { label: "Done",            color: "var(--c-done)",    weight: 1 },
+  partial: { label: "Partial",         color: "var(--c-partial)", weight: .5 },
+  key:     { label: "Waiting on Mendy", color: "var(--c-key)",    weight: 0 },
+  ext:     { label: "External",        color: "var(--c-ext)",     weight: 0 },
+  todo:    { label: "Not started",     color: "var(--c-todo)",    weight: 0 },
 };
 
 const PHASES = [
-  { id: 0, title: "שלב 0 — תשתית + Ground Truth", weeks: "שבוע 1" },
-  { id: 1, title: "שלב 1 — 4 מקורות ליבה", weeks: "שבועות 2–3" },
-  { id: 2, title: "שלב 2 — זיהוי חריגות", weeks: "שבוע 4" },
-  { id: 3, title: "שלב 3 — מוח Claude", weeks: "שבועות 5–6" },
-  { id: 4, title: "שלב 4 — דוחות", weeks: "שבוע 7" },
-  { id: 5, title: "שלב 5 — השכבה הפיננסית", weeks: "שבועות 8–10" },
-  { id: 6, title: "שלב 6 — דשבורד אישי", weeks: "שבועות 11–13" },
-  { id: 7, title: "שלב 7 — הקשחה", weeks: "שבועות 14–16" },
+  { id: 0, title: "Phase 0 — Infrastructure + Ground Truth", weeks: "Week 1" },
+  { id: 1, title: "Phase 1 — 4 Core Sources", weeks: "Weeks 2–3" },
+  { id: 2, title: "Phase 2 — Anomaly Detection", weeks: "Week 4" },
+  { id: 3, title: "Phase 3 — Claude Brain", weeks: "Weeks 5–6" },
+  { id: 4, title: "Phase 4 — Reports", weeks: "Week 7" },
+  { id: 5, title: "Phase 5 — Financial Layer", weeks: "Weeks 8–10" },
+  { id: 6, title: "Phase 6 — Personal Dashboard", weeks: "Weeks 11–13" },
+  { id: 7, title: "Phase 7 — Hardening", weeks: "Weeks 14–16" },
 ];
 
-// { n, p: phase, t: original request, d: description detail, s: status, w: waiting-on, note: what was done }
+// { n, p: phase, t: original request, d: description, s: status, w: waiting on, note: what was done }
 const ITEMS = [
-  { n:1,  p:0, t:"ריפו Git עם מבנה מלא", d:"collectors / pipeline / analysis / db / reports / dashboard / config", s:"tested",
-    note:"קיים ודחוף ל-GitHub (mendykurant222/trend-engine)" },
-  { n:2,  p:0, t:"סביבת Python + config.yaml מרכזי", d:"מקורות פעילים, ספים, קטגוריות, תקציב", s:"tested" },
-  { n:3,  p:0, t:"PostgreSQL מנוהל", d:"תוכנן Supabase — בפועל Neon; תוכנית retention ל-raw ישן", s:"tested",
-    note:"Neon חי; 18 טבלאות" },
-  { n:4,  p:0, t:"סכמת DB מלאה", d:"entities+aliases+היסטוריית מיזוגים, raw_items+hash, daily_signals, anomalies, trend_clusters+ראיות, companies, runs, api_costs, llm_calls, trend_reports", s:"tested" },
-  { n:5,  p:0, t:"מחלקת BaseCollector", d:"ממשק אחיד, retry, rate limiting, לוגים, מעקב עלות", s:"tested" },
-  { n:6,  p:0, t:"Orchestrator", d:"מריץ הכל, מתעד כל ריצה וכל עלות API", s:"tested" },
-  { n:7,  p:0, t:"תזמון יומי ב-GitHub Actions", d:"10:30 UTC; קריאות API בלבד — בלי scraping מ-IP של Actions", s:"done",
-    note:"workflow + כל ה-secrets מוגדרים; ריצות ידניות אומתו, ריצת cron ראשונה תאומת מחר" },
-  { n:8,  p:0, t:"סיכום ריצה יומי", d:"הצליח/נכשל, כמה נאסף, כמה עלה", s:"tested",
-    note:"מגיע לטלגרם שלך כולל פירוט עלות לפי ספק; מייל יופעל עם Resend" },
-  { n:9,  p:0, t:"Ground Truth — רשימת טרנדים מתויגת", d:"15–20 טרנדים ידועים + תאריכי המראה + הגדרת הצלחה (north star)", s:"done",
-    note:"20 טרנדים ב-data/ground_truth.yaml, כולל hype להבחנה" },
-  { n:10, p:0, t:"Backfill היסטורי", d:"Google Trends / Keepa / Reddit אחורה — בייסליינים אמיתיים מהיום הראשון", s:"todo",
-    w:"Google Trends אפשרי כבר; Keepa + אישור Reddit להשלמה" },
-  { n:11, p:0, t:"הקמת ספקי API + תקציב כולל", d:"$300/חודש לכל המערכת, מעקב שוטף ב-api_costs", s:"partial",
-    w:"חשבון Keepa בלבד (~€49/חודש, אפשר לדחות)", note:"SerpApi + Apify חיים; מעקב עלויות: $0.17 החודש מתוך תקרת $300" },
+  { n:1,  p:0, t:"Git repo with full structure", d:"collectors / pipeline / analysis / db / reports / dashboard / config", s:"tested",
+    note:"Live and pushed to GitHub (mendykurant222/trend-engine)" },
+  { n:2,  p:0, t:"Python environment + central config.yaml", d:"Active sources, thresholds, categories, budget", s:"tested" },
+  { n:3,  p:0, t:"Managed PostgreSQL", d:"Planned Supabase — Neon in practice; retention plan for old raw data", s:"tested",
+    note:"Neon live; 18 tables" },
+  { n:4,  p:0, t:"Full DB schema", d:"entities + aliases + merge history, raw_items + hash dedupe, daily_signals, anomalies, trend_clusters + evidence, companies, runs, api_costs, llm_calls, trend_reports", s:"tested" },
+  { n:5,  p:0, t:"BaseCollector class", d:"Uniform interface, retry, rate limiting, logging, cost tracking", s:"tested" },
+  { n:6,  p:0, t:"Orchestrator", d:"Runs everything, records every run and every API cost", s:"tested" },
+  { n:7,  p:0, t:"Daily scheduling on GitHub Actions", d:"10:30 UTC; API calls only — no scraping from Actions IPs", s:"done",
+    note:"Workflow + all secrets configured; manual runs verified, first cron firing to be confirmed" },
+  { n:8,  p:0, t:"Daily run summary", d:"Success/failure, items collected, cost", s:"tested",
+    note:"Arrives in your Telegram with a per-provider cost breakdown; email activates with Resend" },
+  { n:9,  p:0, t:"Ground truth — labeled trend list", d:"15–20 known trends + takeoff dates + success definition (north star)", s:"done",
+    note:"20 trends in data/ground_truth.yaml, incl. deliberate hype cases" },
+  { n:10, p:0, t:"Historical backfill", d:"Google Trends / Keepa / Reddit backwards — real baselines from day one", s:"todo",
+    w:"Trends possible now; Keepa + Reddit approval to complete" },
+  { n:11, p:0, t:"API vendors + total budget", d:"$300/month for the whole system, tracked in api_costs", s:"partial",
+    w:"Keepa account only (~€49/mo, can defer)", note:"SerpApi + Apify live; spend $0.17 of the $300 cap" },
 
-  { n:12, p:1, t:"Google Trends דרך API בתשלום", d:"SerpApi כמסלול ראשי (pytrends מת) + נרמול anchor query", s:"tested",
-    note:"חי! rising queries אמיתיים נאספים (\"tiktok made me buy it products\" ‎+550%). ‏3 seeds/יום = בתוך המכסה החינמית" },
-  { n:13, p:1, t:"Reddit API", d:"18 סאברדיטים להתחלה (יעד 100–200 לפי קטגוריות)", s:"ext",
-    w:"אישור Reddit לבקשת האפליקציה; אחרי אישור — ריפו הופך לפרטי", note:"הקולקטור כתוב ומוכן" },
-  { n:14, p:1, t:"Amazon — Movers & Shakers + Best Sellers", d:"דרך Keepa, לא scraping עצמי", s:"key",
-    w:"KEEPA_KEY — ‏~€49/חודש (אפשר לדחות)", note:"הקולקטור כתוב ומוכן" },
-  { n:15, p:1, t:"TikTok Creative Center", d:"דרך Apify; משמש גם benchmark לכיול", s:"tested",
-    note:"חי! actor נבחר (automation-lab/tiktok-trends-scraper) — 20 האשטגים מדורגים בריצה הראשונה; ‏$0.10/ריצה" },
-  { n:16, p:1, t:"חילוץ ישויות עם Claude Haiku", d:"באצ'ים + איחוד aliases + היסטוריית מיזוגים הפיכה", s:"tested",
-    note:"נבדק חי מול ה-API: labubu, ryze mushroom coffee; ‏$0.001 לבאץ'. שדרוג embeddings — שבוע 4" },
-  { n:17, p:1, t:"Signals Builder", d:"mentions + score_sum יומיים לכל ישות, עם סף מינימום", s:"tested" },
+  { n:12, p:1, t:"Google Trends via paid API", d:"SerpApi as the primary path (pytrends is dead) + anchor-query normalization", s:"tested",
+    note:"LIVE — real rising queries (\"tiktok made me buy it products\" +550%); 3 seeds/day fits the free tier (100/month)" },
+  { n:13, p:1, t:"Reddit API", d:"18 starter subreddits (target 100–200 by category)", s:"ext",
+    w:"Reddit's review of the app request; after approval the repo goes private", note:"Collector fully coded and ready" },
+  { n:14, p:1, t:"Amazon — Movers & Shakers + Best Sellers", d:"Via Keepa, no self-scraping", s:"key",
+    w:"KEEPA_KEY — ~€49/month (can defer)", note:"Collector fully coded and ready" },
+  { n:15, p:1, t:"TikTok Creative Center", d:"Via Apify; doubles as a calibration benchmark", s:"tested",
+    note:"LIVE — actor selected (automation-lab/tiktok-trends-scraper); 20 ranked hashtags on the first run; ~$0.10/run" },
+  { n:16, p:1, t:"Entity extraction with Claude Haiku", d:"Batched + alias merging + reversible merge history", s:"tested",
+    note:"Tested live: labubu, ryze mushroom coffee; $0.001/batch. Embeddings upgrade — week 4" },
+  { n:17, p:1, t:"Signals Builder", d:"Daily mentions + score_sum per entity, with a minimum threshold", s:"tested" },
 
-  { n:18, p:2, t:"בייסליין לכל ישות", d:"לפי אותו יום בשבוע (עונתיות) על 8 שבועות + fallback ל-28 יום", s:"tested" },
-  { n:19, p:2, t:"Velocity + acceleration", d:"קצב שינוי שבוע-מול-שבוע — הלב של גילוי מוקדם", s:"tested" },
-  { n:20, p:2, t:"ניקוד Poisson + new entity surge", d:"מודל Poisson לדאטה דליל (לא z-score); ישות חדשה דורשת 2+ מקורות", s:"tested" },
-  { n:21, p:2, t:"Cross-source bonus", d:"חלון 14 יום (לא בו-זמניות) — ציון ×2", s:"tested",
-    note:"בונוס רצף tiktok→reddit→amazon — לכיול שלב 2" },
-  { n:22, p:2, t:"דוח דיבאג יומי לכיול", d:"טופ חריגות עם בייסליין ופירוט", s:"tested", note:"משולב בסיכום הטלגרם" },
-  { n:23, p:2, t:"הרחבת Ground Truth ל-30+", d:"כולל טרנדים שמתו; הרצת כיול ראשונה", s:"todo",
-    w:"דאטה אמיתי מהמקורות (שבוע 4)" },
+  { n:18, p:2, t:"Per-entity baseline", d:"Same-weekday over 8 weeks (seasonality) + 28-day fallback", s:"tested" },
+  { n:19, p:2, t:"Velocity + acceleration", d:"Week-over-week rate of change — the heart of early detection", s:"tested" },
+  { n:20, p:2, t:"Poisson scoring + new-entity surge", d:"Poisson model for sparse counts (not z-score); new entities need 2+ sources", s:"tested" },
+  { n:21, p:2, t:"Cross-source bonus", d:"14-day window (sources lag each other) — score ×2", s:"tested",
+    note:"Sequence bonus tiktok→reddit→amazon — week-4 calibration" },
+  { n:22, p:2, t:"Daily debug report for calibration", d:"Top anomalies with baseline and details", s:"tested",
+    note:"Included in the Telegram summary" },
+  { n:23, p:2, t:"Expand ground truth to 30+", d:"Incl. dead trends; first calibration run", s:"todo",
+    w:"Real data from the sources (week 4)" },
 
-  { n:24, p:3, t:"Clustering", d:"דו-שלבי: trend memory דטרמיניסטי → Sonnet עם רשימת הטרנדים הפעילים; פלט JSON כפוי-סכמה", s:"tested",
-    note:"נבדק חי: שתי ישויות תאורת-בריכה אוחדו לטרנד אחד" },
-  { n:25, p:3, t:"קטגוריה, שלב, עוצמה + ביטחון", d:"ציון עוצמה 1–100 וציון ביטחון נפרד; כל הראיות נשמרות ל-drill-down", s:"tested" },
-  { n:26, p:3, t:"מיפוי השקעתי", d:"Sonnet מציע — נשמר רק מה שמאומת מול טבלת SEC ‏(10,428 חברות)", s:"tested",
-    note:"נבדק חי: בריכות → POOL/LESL/HAYW; ‏Celsius → CELH מהותי-חיובי, MNST מהותי-שלילי" },
-  { n:27, p:3, t:"Trend memory", d:"התאמה לפי חפיפת ישויות (לא שם); היסטוריית lifecycle", s:"tested",
-    note:"יום שני עם אותן ישויות = 0 כפילויות, lifecycle מצטבר" },
-  { n:28, p:3, t:"מדיניות עלויות Claude", d:"Haiku לסינון, Sonnet לניתוח, Batch API ‏-50%; יעד <$100/חודש", s:"partial",
-    note:"Haiku+Sonnet+מעקב עלויות חיים; מעבר ל-Batch API — שלב 7 (סעיף 50)" },
-  { n:29, p:3, t:"שמירת prompt+response", d:"בדיקת איכות שבועית לשיפור", s:"done",
-    note:"הכל נשמר ב-llm_calls; ריטואל הבדיקה יתחיל עם דאטה אמיתי" },
+  { n:24, p:3, t:"Clustering", d:"Two-stage: deterministic trend memory → Sonnet with the active-trends list; schema-enforced JSON", s:"tested",
+    note:"Tested live: two pool-lighting entities merged into one trend" },
+  { n:25, p:3, t:"Category, stage, strength + confidence", d:"Strength 1–100 and a separate confidence score; full evidence kept for drill-down", s:"tested" },
+  { n:26, p:3, t:"Investment mapping", d:"Sonnet proposes — only tickers verified against the SEC table (10,428 companies) are stored", s:"tested",
+    note:"Tested live: pools → POOL/LESL/HAYW; Celsius → CELH material-positive, MNST material-negative" },
+  { n:27, p:3, t:"Trend memory", d:"Matching by entity overlap (never by name); lifecycle history", s:"tested",
+    note:"Day 2 with the same entities = 0 duplicates, lifecycle accumulates" },
+  { n:28, p:3, t:"Claude cost policy", d:"Haiku for filtering, Sonnet for analysis, Batch API −50%; target <$100/month", s:"partial",
+    note:"Haiku + Sonnet + cost tracking live; Batch API move — phase 7 (item 50)" },
+  { n:29, p:3, t:"Save every prompt + response", d:"Weekly quality review", s:"done",
+    note:"Everything stored in llm_calls; the review ritual starts with real data" },
 
-  { n:30, p:4, t:"דוח יומי", d:"טלגרם + מייל HTML — טופ-5 טרנדים + תובנת השקעה + לינק לפירוט", s:"tested",
-    note:"★ = חשיפה מהותית, ‎+/− כיוון; דוגמה נשלחה לטלגרם שלך. מייל מחכה ל-Resend" },
-  { n:31, p:4, t:"התראות push לקיצון בלבד", d:"רק cross-source surge בציון 90+ — סף גבוה בכוונה", s:"tested" },
-  { n:32, p:4, t:"דוח שבועי + ביצועי תחזיות", d:"טבלת \"דווח לפני 14/30 יום → מה קרה\" — feedback loop מינימלי מהיום הראשון", s:"tested",
-    note:"רץ אוטומטית בימי שני" },
-  { n:33, p:4, t:"דו-לשוני", d:"תקציר עברית, פירוט אנגלית", s:"tested" },
+  { n:30, p:4, t:"Daily report", d:"Telegram + HTML email — top-5 trends + investment insight + link to detail", s:"tested",
+    note:"★ = material exposure, +/− direction; sample delivered to your Telegram. Email waits for Resend" },
+  { n:31, p:4, t:"Push alerts for extremes only", d:"Cross-source surges scoring 90+ — deliberately high bar", s:"tested" },
+  { n:32, p:4, t:"Weekly report + prediction performance", d:"\"Reported 14/30 days ago → what happened\" table — minimal feedback loop from day one", s:"tested",
+    note:"Runs automatically on Mondays" },
+  { n:33, p:4, t:"Language", d:"Originally bilingual (Hebrew summary + English detail)", s:"done",
+    note:"Changed 15.07 per Mendy's decision: everything English-only" },
 
-  { n:34, p:5, t:"מעבר ל-VPS + Docker", d:"$10–20/חודש — כשהריצות יכבדו מדי ל-Actions", s:"todo" },
-  { n:35, p:5, t:"SEC EDGAR", d:"חינם, רשמי — Claude מחלץ אזכורי מגמות מכל דוח רבעוני", s:"todo", note:"הבא בתור — לא דורש מפתח" },
-  { n:36, p:5, t:"דוחות מחקר", d:"McKinsey, Gartner, CB Insights, ARK — סיכום אוטומטי למגמות", s:"todo" },
-  { n:37, p:5, t:"חדשות", d:"NewsAPI או GDELT (חינם)", s:"todo" },
-  { n:38, p:5, t:"YouTube Data API", d:"נפחי צפיות לפי נושא", s:"todo", w:"מפתח Google API (חינם) — כשנגיע" },
-  { n:39, p:5, t:"Instagram דרך צד ג'", d:"לפי תקציב — לא קריטי", s:"todo" },
-  { n:40, p:5, t:"משקל אמינות למקור", d:"בחישוב הציון הכולל", s:"todo" },
+  { n:34, p:5, t:"Move to VPS + Docker", d:"$10–20/month — when runs outgrow GitHub Actions", s:"todo" },
+  { n:35, p:5, t:"SEC EDGAR", d:"Free, official — Claude extracts trend mentions from quarterly earnings transcripts", s:"todo",
+    note:"Next up — needs no key" },
+  { n:36, p:5, t:"Research reports", d:"McKinsey, Gartner, CB Insights, ARK — auto-summarized into structured trends", s:"todo" },
+  { n:37, p:5, t:"News", d:"NewsAPI or GDELT (free)", s:"todo" },
+  { n:38, p:5, t:"YouTube Data API", d:"View volumes by topic", s:"todo", w:"Google API key (free) — when we get there" },
+  { n:39, p:5, t:"Instagram via third party", d:"Budget-dependent — not critical", s:"todo" },
+  { n:40, p:5, t:"Per-source reliability weight", d:"In the overall score", s:"todo" },
 
-  { n:41, p:6, t:"אפליקציית דשבורד", d:"טרנדים חיים + עמוד לטרנד עם גרפים, ישויות, חברות, ו-drill-down עד הפריט הגולמי", s:"todo" },
-  { n:42, p:6, t:"חיפוש ופילטרים", d:"קטגוריה, שלב, עוצמה, ביטחון", s:"todo" },
-  { n:43, p:6, t:"Watchlist אישי", d:"עם התראות מוגברות", s:"todo" },
-  { n:44, p:6, t:"עמוד Graveyard", d:"טרנדים שמתו — ללמידה מה אמיתי ומה הייפ", s:"todo" },
-  { n:45, p:6, t:"הגנת גישה פשוטה", d:"משתמש יחיד — בלי multi-tenancy", s:"todo" },
+  { n:41, p:6, t:"Dashboard web app", d:"Live trends + per-trend page with charts, entities, companies, and drill-down to the raw items", s:"todo" },
+  { n:42, p:6, t:"Search and filters", d:"Category, stage, strength, confidence", s:"todo" },
+  { n:43, p:6, t:"Personal watchlist", d:"With boosted alerts", s:"todo" },
+  { n:44, p:6, t:"Graveyard page", d:"Dead trends — learn what was real vs hype", s:"todo" },
+  { n:45, p:6, t:"Simple access protection", d:"Single user — no multi-tenancy", s:"todo" },
 
-  { n:46, p:7, t:"Backtesting מלא", d:"מול רשימת ה-ground truth המורחבת; כיול סופי", s:"todo", w:"backfill (סעיף 10)" },
-  { n:47, p:7, t:"Feedback loop אוטומטי", d:"מדד precision רציף, מדווח שבועית", s:"partial",
-    note:"הגרסה המינימלית (trend_reports + ציון בדוח השבועי) כבר חיה" },
-  { n:48, p:7, t:"Health checks לכל Collector", d:"התראה כשמקור נופל", s:"partial",
-    note:"כשלים כבר מדווחים בסיכום היומי; התראת קיצון ייעודית — טרם" },
-  { n:49, p:7, t:"גיבויים, סודות, rate limits", d:"", s:"partial",
-    note:"secrets ב-env+GitHub מוצפן; retry+rate-limit ב-BaseCollector; retention/גיבוי חיצוני — טרם" },
-  { n:50, p:7, t:"אופטימיזציית עלויות Claude", d:"prompt caching, Batch API, סינון לפני שליחה", s:"todo" },
-  { n:51, p:7, t:"תיעוד מלא", d:"כך שקבלן יוכל להיכנס בעתיד", s:"partial", note:"README מקיף קיים; תיעוד עומק — שלב 7" },
+  { n:46, p:7, t:"Full backtesting", d:"Against the expanded ground truth; final threshold calibration", s:"todo",
+    w:"Backfill (item 10)" },
+  { n:47, p:7, t:"Automated feedback loop", d:"Continuous precision metric, reported weekly", s:"partial",
+    note:"The minimal version (trend_reports + weekly grading) is already live" },
+  { n:48, p:7, t:"Health checks per collector", d:"Alert when a source goes down", s:"partial",
+    note:"Failures already reported in the daily summary; a dedicated alert — not yet" },
+  { n:49, p:7, t:"Backups, secrets, rate limits", d:"", s:"partial",
+    note:"Secrets in .env + encrypted GitHub; retry + rate limiting in BaseCollector; external backup/retention — not yet" },
+  { n:50, p:7, t:"Claude cost optimization", d:"Prompt caching, Batch API, pre-filtering before sending", s:"todo" },
+  { n:51, p:7, t:"Full documentation", d:"So a contractor could onboard in the future", s:"partial",
+    note:"Comprehensive README exists; deep docs — phase 7" },
 ];
 
 let filter = null;
 
 function render() {
-  // summary
   const counts = {};
   for (const k in STATUSES) counts[k] = 0;
   let weight = 0;
@@ -243,7 +246,7 @@ function render() {
   const pct = Math.round(100 * weight / ITEMS.length);
   document.getElementById("pct").textContent = pct + "%";
   document.getElementById("pct-lbl").textContent =
-    `${counts.tested + counts.done} מתוך ${ITEMS.length} סעיפים הושלמו (${counts.tested} מהם נבדקו) · ${counts.partial} חלקיים`;
+    `${counts.tested + counts.done} of ${ITEMS.length} items complete (${counts.tested} tested) · ${counts.partial} partial`;
 
   const bar = document.getElementById("bar");
   bar.innerHTML = "";
@@ -259,7 +262,7 @@ function render() {
   chips.innerHTML = "";
   const all = document.createElement("button");
   all.className = "chip"; all.setAttribute("aria-pressed", filter === null);
-  all.innerHTML = `הכל <span class="n mono">${ITEMS.length}</span>`;
+  all.innerHTML = `All <span class="n mono">${ITEMS.length}</span>`;
   all.onclick = () => { filter = null; render(); };
   chips.appendChild(all);
   for (const k of ["tested","done","partial","key","ext","todo"]) {
@@ -271,7 +274,6 @@ function render() {
     chips.appendChild(b);
   }
 
-  // phases
   const main = document.getElementById("phases");
   main.innerHTML = "";
   for (const ph of PHASES) {
@@ -304,7 +306,7 @@ function render() {
           ${it.d ? `<div class="desc">${it.d}</div>` : ""}
           ${it.note ? `<div class="note">${it.note}</div>` : ""}
         </div>
-        <div class="wait">${it.w ? `⏳ מחכה ל: <b>${it.w}</b>` : ""}</div>
+        <div class="wait">${it.w ? `⏳ Waiting on: <b>${it.w}</b>` : ""}</div>
         <div class="status" style="--sc:${st.color}">${st.label}</div>`;
       list.appendChild(row);
     }

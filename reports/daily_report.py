@@ -51,17 +51,16 @@ def build_daily_report(conn, config: dict, target_date: date | None = None) -> t
         "select count(*) from anomalies where signal_date = %s", (target_date,)
     ).fetchone()[0]
 
-    # Hebrew summary (plan item 33), English detail below
     strongest = trends[0]
-    he = (f"זוהו {len(trends)} טרנדים פעילים; החזק ביותר: "
-          f"{esc(strongest['name'])} (עוצמה {strongest['strength']}, שלב {esc(strongest['stage'])}). "
-          f"{n_anomalies} חריגות נרשמו היום.")
+    summary = (f"{len(trends)} active trends; strongest: {esc(strongest['name'])} "
+               f"(strength {strongest['strength']}, {esc(strongest['stage'])}). "
+               f"{n_anomalies} anomalies recorded today.")
 
     lines = [
         f"📊 <b>Trend Engine — Daily Report</b>",
         f"<i>{target_date.strftime('%d.%m.%Y')}</i>",
         "",
-        f"🇮🇱 {he}",
+        summary,
         "",
         "<b>Top Trends</b>",
     ]

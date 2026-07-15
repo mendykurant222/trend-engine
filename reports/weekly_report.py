@@ -47,14 +47,14 @@ def build_weekly_report(conn, config: dict, target_date: date | None = None) -> 
         """select coalesce(sum(cost_usd), 0) from api_costs
            where created_at >= date_trunc('month', now())""").fetchone()[0]
 
-    he = (f"סיכום שבועי: {len(new_trends)} טרנדים חדשים, {active} פעילים סה\"כ, "
-          f"{week_anomalies} חריגות השבוע.")
+    summary = (f"Week in review: {len(new_trends)} new trends, {active} active in total, "
+               f"{week_anomalies} anomalies this week.")
 
     lines = [
         "🗓 <b>Trend Engine — Weekly Report</b>",
         f"<i>{week_ago.strftime('%d.%m')} – {target_date.strftime('%d.%m.%Y')}</i>",
         "",
-        f"🇮🇱 {he}",
+        summary,
         "",
         f"<b>New trends this week ({len(new_trends)})</b>",
     ]

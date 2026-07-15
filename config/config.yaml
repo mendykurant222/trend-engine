@@ -85,7 +85,7 @@ anomalies:
 reports:
   email_to: mkurant@bkonect.com
   telegram_enabled: true
-  language: he-summary-en-detail  # plan item 33
+  language: en                    # plan item 33 — changed 2026-07-15: English everywhere
   daily_top_n: 5                  # plan item 30
   weekly_day: 0                   # 0 = Monday — weekly report day (plan item 32)
 
