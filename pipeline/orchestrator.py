@@ -99,7 +99,8 @@ def run(config: dict) -> int:
     spend = db.month_spend(conn)
     status = "partial" if any_failed else "ok"
     if all(r[1] != "ok" for r in results):
-        status = "failed"
+        # nothing collected: real failures → failed; everything merely skipped → empty
+        status = "failed" if any_failed else "empty"
     db.finish_run(conn, run_id, status, {
         "collectors": [{"name": n, "status": s, "seen": seen, "stored": st, "error": e}
                        for n, s, seen, st, e in results],
