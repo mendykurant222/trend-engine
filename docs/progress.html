@@ -104,7 +104,7 @@
 <div class="wrap">
   <header>
     <h1>📈 Trend Engine — Progress Tracker</h1>
-    <p class="sub">Updated <b>15.07.2026 (evening)</b> · <b>2 sources live</b>: Google Trends + TikTok · DB: Neon · Reports: Telegram · Month spend: <b class="mono">$0.17</b></p>
+    <p class="sub">Updated <b>15.07.2026 (night)</b> · <b>4 sources live</b>: Google Trends, TikTok, SEC EDGAR, GDELT · DB: Neon · Reports: Telegram · Month spend: <b class="mono">$0.30</b></p>
   </header>
 
   <section class="summary" aria-label="Overall summary">
@@ -161,8 +161,9 @@ const ITEMS = [
     note:"Arrives in your Telegram with a per-provider cost breakdown; email activates with Resend" },
   { n:9,  p:0, t:"Ground truth — labeled trend list", d:"15–20 known trends + takeoff dates + success definition (north star)", s:"done",
     note:"20 trends in data/ground_truth.yaml, incl. deliberate hype cases" },
-  { n:10, p:0, t:"Historical backfill", d:"Google Trends / Keepa / Reddit backwards — real baselines from day one", s:"todo",
-    w:"Trends possible now; Keepa + Reddit approval to complete" },
+  { n:10, p:0, t:"Historical backfill", d:"Google Trends / Keepa / Reddit backwards — real baselines from day one", s:"partial",
+    w:"Keepa + Reddit approval for the remaining sources",
+    note:"News source back-fills itself: every GDELT call returns a 90-day daily timeline, so watched entities get instant baselines" },
   { n:11, p:0, t:"API vendors + total budget", d:"$300/month for the whole system, tracked in api_costs", s:"partial",
     w:"Keepa account only (~€49/mo, can defer)", note:"SerpApi + Apify live; spend $0.17 of the $300 cap" },
 
@@ -209,10 +210,11 @@ const ITEMS = [
     note:"Changed 15.07 per Mendy's decision: everything English-only" },
 
   { n:34, p:5, t:"Move to VPS + Docker", d:"$10–20/month — when runs outgrow GitHub Actions", s:"todo" },
-  { n:35, p:5, t:"SEC EDGAR", d:"Free, official — Claude extracts trend mentions from quarterly earnings transcripts", s:"todo",
-    note:"Next up — needs no key" },
+  { n:35, p:5, t:"SEC EDGAR", d:"Free, official — trend mentions from company filings", s:"tested",
+    note:"LIVE via full-text search (EDGAR has no call transcripts — filings instead, which also return the exact company + ticker). Test: pickleball → CaliberCos (CWD) 8-K found" },
   { n:36, p:5, t:"Research reports", d:"McKinsey, Gartner, CB Insights, ARK — auto-summarized into structured trends", s:"todo" },
-  { n:37, p:5, t:"News", d:"NewsAPI or GDELT (free)", s:"todo" },
+  { n:37, p:5, t:"News", d:"NewsAPI or GDELT (free)", s:"tested",
+    note:"LIVE via GDELT volume timelines — one call per entity returns ~90 days of daily article counts (feeds anomalies + cross-source like any source)" },
   { n:38, p:5, t:"YouTube Data API", d:"View volumes by topic", s:"todo", w:"Google API key (free) — when we get there" },
   { n:39, p:5, t:"Instagram via third party", d:"Budget-dependent — not critical", s:"todo" },
   { n:40, p:5, t:"Per-source reliability weight", d:"In the overall score", s:"todo" },

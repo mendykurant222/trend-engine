@@ -70,6 +70,17 @@ sources:
       maxResults: 100
     cost_per_run_usd: 0.10
 
+  sec_edgar:
+    enabled: true                 # free official API, no key (plan item 35)
+    forms: ["8-K", "10-K", "10-Q"]
+    lookback_days: 30
+    max_queries: 20               # entity searches per run
+
+  gdelt:
+    enabled: true                 # free news volume, no key (plan item 37)
+    timespan_days: 90             # one call returns the full daily timeline
+    max_queries: 20
+
 signals:
   min_mentions_threshold: 3       # entity must clear this before entering anomaly math (plan item 17)
 

@@ -47,5 +47,41 @@ def build_daily_signals(conn, signal_date=None) -> int:
     """, params)
     n += cur.rowcount
 
+    n += _structured_source_signals(conn)
     log.info("signals: %d rows upserted", n)
     return n
+
+
+def _structured_source_signals(conn) -> int:
+    """Sources whose items are already entity-linked at collection time
+    (no extraction step): GDELT news volume timelines and EDGAR filing hits.
+    Both land as metric='mentions' so anomaly detection and the cross-source
+    bonus treat them like any other source."""
+    # GDELT: each recent item carries a ~90-day daily-volume timeline —
+    # upserting it back-fills history for the news source automatically.
+    cur = conn.execute("""
+        insert into daily_signals (entity_id, source, signal_date, metric, value)
+        select (ri.payload->>'entity_id')::bigint, 'gdelt',
+               (point->>'date')::date, 'mentions', (point->>'value')::numeric
+        from raw_items ri, jsonb_array_elements(ri.payload->'timeline') point
+        where ri.source = 'gdelt' and ri.payload->>'type' = 'news_volume'
+          and ri.collected_at >= now() - interval '3 days'
+          and exists (select 1 from entities e where e.id = (ri.payload->>'entity_id')::bigint)
+        on conflict (entity_id, source, signal_date, metric)
+        do update set value = excluded.value
+    """)
+    n = cur.rowcount
+
+    cur = conn.execute("""
+        insert into daily_signals (entity_id, source, signal_date, metric, value)
+        select (ri.payload->>'entity_id')::bigint, 'sec_edgar',
+               ri.item_date, 'mentions', count(*)
+        from raw_items ri
+        where ri.source = 'sec_edgar' and ri.payload->>'type' = 'filing_mention'
+          and ri.item_date is not null
+          and exists (select 1 from entities e where e.id = (ri.payload->>'entity_id')::bigint)
+        group by 1, 2, 3
+        on conflict (entity_id, source, signal_date, metric)
+        do update set value = excluded.value
+    """)
+    return n + cur.rowcount

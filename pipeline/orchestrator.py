@@ -18,8 +18,10 @@ from dotenv import load_dotenv
 
 from collectors.amazon import AmazonCollector
 from collectors.base import BaseCollector
+from collectors.gdelt import GdeltCollector
 from collectors.google_trends import GoogleTrendsCollector
 from collectors.reddit import RedditCollector
+from collectors.sec_edgar import SecEdgarCollector
 from collectors.tiktok import TikTokCollector
 from pipeline import db
 from reports.run_summary import send_summary
@@ -33,6 +35,8 @@ COLLECTORS: list[type[BaseCollector]] = [
     GoogleTrendsCollector,
     AmazonCollector,
     TikTokCollector,
+    SecEdgarCollector,
+    GdeltCollector,
 ]
 
 
@@ -68,6 +72,9 @@ def run(config: dict) -> int:
             db.record_collector_run(conn, run_id, collector.name, "skipped", error="disabled in config")
             results.append((collector.name, "skipped", 0, 0, "disabled"))
             continue
+        if getattr(collector, "needs_watchlist", False):
+            collector.watch_entities = db.watch_entities(
+                conn, int(collector.config.get("max_queries", 20)))
         reason = collector.ready()
         if reason:
             db.record_collector_run(conn, run_id, collector.name, "skipped", error=reason)

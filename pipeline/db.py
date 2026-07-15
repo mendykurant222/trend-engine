@@ -84,6 +84,23 @@ def store_raw_items(conn, source: str, items: list[dict]) -> int:
     return stored
 
 
+def watch_entities(conn, limit: int = 20) -> list[tuple[int, str]]:
+    """Entities worth querying in entity-driven collectors (EDGAR, GDELT):
+    members of active trends, recently anomalous, or newly discovered."""
+    rows = conn.execute(
+        """select distinct e.id, e.canonical_name from entities e
+           where e.status = 'active' and (
+             exists (select 1 from trend_cluster_entities tce
+                     join trend_clusters t on t.id = tce.cluster_id and t.status = 'active'
+                     where tce.entity_id = e.id)
+             or exists (select 1 from anomalies a
+                        where a.entity_id = e.id and a.signal_date >= current_date - 14)
+             or e.first_seen >= current_date - 7)
+           order by e.id desc limit %s""", (limit,),
+    ).fetchall()
+    return [(r[0], r[1]) for r in rows]
+
+
 def month_spend(conn) -> list[tuple[str, float]]:
     """Current calendar-month spend per provider, for the budget line in the daily summary."""
     rows = conn.execute(
