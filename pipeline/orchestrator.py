@@ -96,6 +96,23 @@ def run(config: dict) -> int:
             for operation, units, cost in collector.costs:
                 db.record_cost(conn, run_id, collector.name, operation, units, cost)
 
+    # pipeline steps after collection: entity extraction (Haiku) + signals
+    from pipeline.entities import run_extraction
+    from pipeline.signals import build_daily_signals
+    try:
+        extraction = run_extraction(conn, run_id)
+        if extraction["status"] == "ok":
+            signal_rows = build_daily_signals(conn)
+            results.append(("entity_extraction", "ok",
+                            extraction["items"], extraction["mentions"], None))
+            results.append(("signals_builder", "ok", signal_rows, signal_rows, None))
+        else:
+            results.append(("entity_extraction", "skipped", 0, 0, extraction.get("reason")))
+    except Exception as exc:
+        any_failed = True
+        results.append(("entity_extraction", "failed", 0, 0, str(exc)))
+        log.exception("extraction/signals failed")
+
     spend = db.month_spend(conn)
     status = "partial" if any_failed else "ok"
     if all(r[1] != "ok" for r in results):

@@ -44,6 +44,16 @@ create table if not exists raw_items (
 create index if not exists raw_items_source_date on raw_items (source, item_date);
 create index if not exists raw_items_collected on raw_items (collected_at);
 
+-- entity-extraction bookkeeping (Phase 1)
+alter table raw_items add column if not exists entities_extracted_at timestamptz;
+
+-- which entities appear in which raw items — the basis for mention counts
+create table if not exists raw_item_entities (
+    raw_item_id bigint not null references raw_items(id),
+    entity_id   bigint not null references entities(id),
+    unique (raw_item_id, entity_id)
+);
+
 create table if not exists daily_signals (
     id          bigserial primary key,
     entity_id   bigint not null references entities(id),

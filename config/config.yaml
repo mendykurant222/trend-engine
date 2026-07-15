@@ -77,5 +77,5 @@ anomalies:
 
 reports:
   email_to: mkurant@bkonect.com
-  telegram_enabled: false         # enable once TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID are set
+  telegram_enabled: true
   language: he-summary-en-detail  # plan item 33
