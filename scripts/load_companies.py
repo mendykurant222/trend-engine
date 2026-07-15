@@ -25,18 +25,17 @@ def main() -> int:
         timeout=60,
     )
     resp.raise_for_status()
-    rows = resp.json().values()
-    count = 0
-    with conn.cursor() as cur:
-        for row in rows:
-            cur.execute(
-                """insert into companies (ticker, name, cik)
-                   values (%s, %s, %s)
-                   on conflict (ticker) do update set name = excluded.name, cik = excluded.cik""",
-                (row["ticker"], row["title"], str(row["cik_str"])),
-            )
-            count += 1
-    print(f"loaded/updated {count} companies from SEC")
+    rows = list(resp.json().values())
+    # batched executemany in one transaction — row-by-row autocommit over a
+    # remote pooler means ~10k network round-trips
+    with conn.transaction(), conn.cursor() as cur:
+        cur.executemany(
+            """insert into companies (ticker, name, cik)
+               values (%s, %s, %s)
+               on conflict (ticker) do update set name = excluded.name, cik = excluded.cik""",
+            [(r["ticker"], r["title"], str(r["cik_str"])) for r in rows],
+        )
+    print(f"loaded/updated {len(rows)} companies from SEC")
     return 0
 
 
