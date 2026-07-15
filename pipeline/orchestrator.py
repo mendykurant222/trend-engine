@@ -96,9 +96,11 @@ def run(config: dict) -> int:
             for operation, units, cost in collector.costs:
                 db.record_cost(conn, run_id, collector.name, operation, units, cost)
 
-    # pipeline steps after collection: entity extraction (Haiku) + signals
+    # pipeline steps after collection: extraction (Haiku) -> signals -> anomalies
+    from analysis.anomalies import debug_report, detect_anomalies
     from pipeline.entities import run_extraction
     from pipeline.signals import build_daily_signals
+    extra_lines: list[str] = []
     try:
         extraction = run_extraction(conn, run_id)
         if extraction["status"] == "ok":
@@ -106,12 +108,15 @@ def run(config: dict) -> int:
             results.append(("entity_extraction", "ok",
                             extraction["items"], extraction["mentions"], None))
             results.append(("signals_builder", "ok", signal_rows, signal_rows, None))
+            n_anomalies = detect_anomalies(conn, config)
+            results.append(("anomaly_detector", "ok", n_anomalies, n_anomalies, None))
+            extra_lines = debug_report(conn)
         else:
             results.append(("entity_extraction", "skipped", 0, 0, extraction.get("reason")))
     except Exception as exc:
         any_failed = True
         results.append(("entity_extraction", "failed", 0, 0, str(exc)))
-        log.exception("extraction/signals failed")
+        log.exception("extraction/signals/anomalies failed")
 
     spend = db.month_spend(conn)
     status = "partial" if any_failed else "ok"
@@ -125,7 +130,7 @@ def run(config: dict) -> int:
     })
     log.info("run %d finished: %s", run_id, status)
 
-    send_summary(config, run_id, status, results, spend)
+    send_summary(config, run_id, status, results, spend, extra_lines)
     return 0 if status != "failed" else 1
 
 

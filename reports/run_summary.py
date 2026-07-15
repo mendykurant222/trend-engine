@@ -13,7 +13,8 @@ import requests
 log = logging.getLogger("summary")
 
 
-def build_text(run_id: int, status: str, results: list, spend: list) -> str:
+def build_text(run_id: int, status: str, results: list, spend: list,
+               extra_lines: list[str] | None = None) -> str:
     lines = [f"Trend Engine run #{run_id} — {status.upper()}", ""]
     for name, st, seen, stored, error in results:
         mark = {"ok": "✅", "failed": "❌", "skipped": "⏭️"}.get(st, "?")
@@ -23,6 +24,9 @@ def build_text(run_id: int, status: str, results: list, spend: list) -> str:
         elif error:
             line += f" — {error[:200]}"
         lines.append(line)
+    if extra_lines:
+        lines.append("")
+        lines.extend(extra_lines)
     lines.append("")
     total = sum(c for _, c in spend)
     lines.append(f"Month-to-date spend: ${total:.2f}")
@@ -31,8 +35,9 @@ def build_text(run_id: int, status: str, results: list, spend: list) -> str:
     return "\n".join(lines)
 
 
-def send_summary(config: dict, run_id: int, status: str, results: list, spend: list) -> None:
-    text = build_text(run_id, status, results, spend)
+def send_summary(config: dict, run_id: int, status: str, results: list, spend: list,
+                 extra_lines: list[str] | None = None) -> None:
+    text = build_text(run_id, status, results, spend, extra_lines)
     print("\n" + text + "\n")
 
     budget = config.get("budget", {})

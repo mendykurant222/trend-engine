@@ -71,7 +71,10 @@ signals:
 
 anomalies:
   poisson_p_threshold: 0.001      # plan item 20 — Poisson tail probability, not naive z-score
-  cross_source_window_days: 14    # plan item 21
+  acceleration_ratio: 2.0         # velocity must double week-over-week
+  cross_source_window_days: 14    # plan item 21 — sources lag each other; not simultaneity
+  cross_source_bonus: 2.0
+  new_entity_window_days: 7
   new_entity_min_mentions: 5
   new_entity_min_sources: 2
 
