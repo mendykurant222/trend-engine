@@ -5,6 +5,7 @@ values are comparable across days (Google returns relative 0-100 per request).
 """
 
 import os
+from datetime import date
 
 from .base import BaseCollector
 
@@ -35,9 +36,10 @@ class GoogleTrendsCollector(BaseCollector):
             data = self._search({"q": seed, "data_type": "RELATED_QUERIES"})
             rising = (data.get("related_queries") or {}).get("rising", [])
             if rising:
+                today = date.today().isoformat()
                 items.append({
-                    "external_id": f"rising:{seed}",
-                    "item_date": None,
+                    "external_id": f"rising:{seed}:{today}",
+                    "item_date": today,   # "rising as of today" — lets signals count it
                     "payload": {"type": "rising_queries", "seed": seed, "rising": rising},
                 })
 

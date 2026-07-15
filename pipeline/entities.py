@@ -106,6 +106,10 @@ def item_text(source: str, payload: dict) -> str | None:
     if source == "google_trends" and payload.get("type") == "rising_queries":
         queries = [r.get("query", "") for r in payload.get("rising", [])]
         return "Rising search queries: " + ", ".join(q for q in queries if q)
+    if source == "tiktok" and payload.get("type") == "creative_center":
+        row = payload.get("row", {})
+        return (f"TikTok trending {row.get('type', 'hashtag')}: {row.get('name')} "
+                f"(views {row.get('videoViews')}, trend {row.get('trend')})")
     # amazon/tiktok payloads are structured (ASINs, hashtag rows) — Phase 1 TODO:
     # resolve ASINs to titles via Keepa before extraction
     return None

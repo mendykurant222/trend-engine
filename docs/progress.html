@@ -105,7 +105,7 @@
 <div class="wrap">
   <header>
     <h1>📈 מנוע גילוי טרנדים — מעקב התקדמות</h1>
-    <p class="sub">עודכן <b>15.07.2026</b> · ריפו: trend-engine · DB: Neon · דיווח: Telegram · הוצאה החודש: <b class="mono">$0.03</b></p>
+    <p class="sub">עודכן <b>15.07.2026 (ערב)</b> · <b>2 מקורות חיים</b>: Google Trends + TikTok · DB: Neon · דיווח: Telegram · הוצאה החודש: <b class="mono">$0.17</b></p>
   </header>
 
   <section class="summary" aria-label="סיכום כללי">
@@ -159,22 +159,22 @@ const ITEMS = [
   { n:7,  p:0, t:"תזמון יומי ב-GitHub Actions", d:"10:30 UTC; קריאות API בלבד — בלי scraping מ-IP של Actions", s:"done",
     note:"workflow + כל ה-secrets מוגדרים; ריצות ידניות אומתו, ריצת cron ראשונה תאומת מחר" },
   { n:8,  p:0, t:"סיכום ריצה יומי", d:"הצליח/נכשל, כמה נאסף, כמה עלה", s:"tested",
-    note:"מגיע לטלגרם שלך; מייל יופעל עם Resend" },
+    note:"מגיע לטלגרם שלך כולל פירוט עלות לפי ספק; מייל יופעל עם Resend" },
   { n:9,  p:0, t:"Ground Truth — רשימת טרנדים מתויגת", d:"15–20 טרנדים ידועים + תאריכי המראה + הגדרת הצלחה (north star)", s:"done",
     note:"20 טרנדים ב-data/ground_truth.yaml, כולל hype להבחנה" },
   { n:10, p:0, t:"Backfill היסטורי", d:"Google Trends / Keepa / Reddit אחורה — בייסליינים אמיתיים מהיום הראשון", s:"todo",
-    w:"מפתחות המקורות (סעיפים 12–15)" },
+    w:"Google Trends אפשרי כבר; Keepa + אישור Reddit להשלמה" },
   { n:11, p:0, t:"הקמת ספקי API + תקציב כולל", d:"$300/חודש לכל המערכת, מעקב שוטף ב-api_costs", s:"partial",
-    w:"חשבונות SerpApi / Keepa / Apify — מנדי", note:"מעקב העלויות חי ($0.03 החודש); הדרכת מפתחות נמסרה" },
+    w:"חשבון Keepa בלבד (~€49/חודש, אפשר לדחות)", note:"SerpApi + Apify חיים; מעקב עלויות: $0.17 החודש מתוך תקרת $300" },
 
-  { n:12, p:1, t:"Google Trends דרך API בתשלום", d:"SerpApi כמסלול ראשי (pytrends מת) + נרמול anchor query", s:"key",
-    w:"SERPAPI_KEY — חינם 100 חיפושים/חודש להתחלה", note:"הקולקטור כתוב ומוכן" },
+  { n:12, p:1, t:"Google Trends דרך API בתשלום", d:"SerpApi כמסלול ראשי (pytrends מת) + נרמול anchor query", s:"tested",
+    note:"חי! rising queries אמיתיים נאספים (\"tiktok made me buy it products\" ‎+550%). ‏3 seeds/יום = בתוך המכסה החינמית" },
   { n:13, p:1, t:"Reddit API", d:"18 סאברדיטים להתחלה (יעד 100–200 לפי קטגוריות)", s:"ext",
     w:"אישור Reddit לבקשת האפליקציה; אחרי אישור — ריפו הופך לפרטי", note:"הקולקטור כתוב ומוכן" },
   { n:14, p:1, t:"Amazon — Movers & Shakers + Best Sellers", d:"דרך Keepa, לא scraping עצמי", s:"key",
     w:"KEEPA_KEY — ‏~€49/חודש (אפשר לדחות)", note:"הקולקטור כתוב ומוכן" },
-  { n:15, p:1, t:"TikTok Creative Center", d:"דרך Apify; משמש גם benchmark לכיול", s:"key",
-    w:"APIFY_TOKEN — חינם $5 קרדיט/חודש", note:"הקולקטור כתוב; בחירת actor עליי" },
+  { n:15, p:1, t:"TikTok Creative Center", d:"דרך Apify; משמש גם benchmark לכיול", s:"tested",
+    note:"חי! actor נבחר (automation-lab/tiktok-trends-scraper) — 20 האשטגים מדורגים בריצה הראשונה; ‏$0.10/ריצה" },
   { n:16, p:1, t:"חילוץ ישויות עם Claude Haiku", d:"באצ'ים + איחוד aliases + היסטוריית מיזוגים הפיכה", s:"tested",
     note:"נבדק חי מול ה-API: labubu, ryze mushroom coffee; ‏$0.001 לבאץ'. שדרוג embeddings — שבוע 4" },
   { n:17, p:1, t:"Signals Builder", d:"mentions + score_sum יומיים לכל ישות, עם סף מינימום", s:"tested" },

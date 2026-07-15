@@ -40,8 +40,12 @@ class TikTokCollector(BaseCollector):
         rows = resp.json()
         if not isinstance(rows, list):
             raise CollectorError(f"unexpected Apify response: {str(rows)[:200]}")
-        return [{
-            "external_id": None,
-            "item_date": None,
-            "payload": {"type": "creative_center", "row": row},
-        } for row in rows]
+        items = []
+        for row in rows:
+            day = (row.get("scrapedAt") or "")[:10] or None
+            items.append({
+                "external_id": f"{row.get('type')}:{row.get('name')}:{day}",
+                "item_date": day,
+                "payload": {"type": "creative_center", "row": row},
+            })
+        return items

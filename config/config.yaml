@@ -42,16 +42,15 @@ sources:
     posts_per_subreddit: 50
 
   google_trends:
-    enabled: false                # enable once SERPAPI_KEY is set
+    enabled: true
     provider: serpapi             # paid API is the PRIMARY path — pytrends dropped (plan item 12)
     anchor_query: "weather"       # fixed anchor for cross-day normalization
     cost_per_search_usd: 0.01
-    seed_queries:                 # category seeds for rising-queries discovery
-      - "kitchen gadget"
+    # free tier = 100 searches/month -> 3 seeds/day = 90. Expand list after upgrade.
+    seed_queries:
       - "viral product"
       - "tiktok made me buy it"
-      - "home decor trend"
-      - "skincare trend"
+      - "trending gadget"
 
   amazon:
     enabled: false                # enable once KEEPA_KEY is set
@@ -61,9 +60,14 @@ sources:
     cost_per_token_usd: 0.0005
 
   tiktok:
-    enabled: false                # enable once APIFY_TOKEN is set
+    enabled: true
     provider: apify
-    actor_id: ""                  # Apify actor for TikTok Creative Center; pick in Phase 1
+    actor_id: automation-lab/tiktok-trends-scraper   # Creative Center trends
+    actor_input:
+      trendType: hashtag
+      countryCode: US
+      period: 7
+      maxResults: 100
     cost_per_run_usd: 0.10
 
 signals:
