@@ -126,6 +126,18 @@ create table if not exists trend_companies (
     unique (cluster_id, company_id)
 );
 
+-- which trends were reported when — feeds the prediction-performance table
+-- in the weekly report (plan item 32) and the full feedback loop (item 47)
+create table if not exists trend_reports (
+    id            bigserial primary key,
+    cluster_id    bigint not null references trend_clusters(id),
+    reported_date date not null,
+    stage         text,
+    strength      int,
+    confidence    int,
+    unique (cluster_id, reported_date)
+);
+
 create table if not exists runs (
     id          bigserial primary key,
     started_at  timestamptz not null default now(),

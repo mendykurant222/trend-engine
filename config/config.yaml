@@ -82,3 +82,8 @@ reports:
   email_to: mkurant@bkonect.com
   telegram_enabled: true
   language: he-summary-en-detail  # plan item 33
+  daily_top_n: 5                  # plan item 30
+  weekly_day: 0                   # 0 = Monday — weekly report day (plan item 32)
+
+alerts:                           # plan item 31 — deliberately high threshold
+  min_score: 90                   # only cross-source surges at/above this alert

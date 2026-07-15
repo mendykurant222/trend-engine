@@ -117,6 +117,17 @@ def run(config: dict) -> int:
                             stats["entities"], stats["new"] + stats["updated"], None))
             if trend_lines:
                 extra_lines += [""] + trend_lines
+
+            # product reports: daily trend report + extreme alerts; weekly on its day
+            from datetime import date as _date
+            from reports.daily_report import send_daily_report
+            from reports.weekly_report import send_weekly_report
+            report = send_daily_report(conn, config)
+            results.append(("daily_report", "ok",
+                            report["trends_reported"], report["alerts"], None))
+            if _date.today().weekday() == config.get("reports", {}).get("weekly_day", 0):
+                send_weekly_report(conn, config)
+                results.append(("weekly_report", "ok", 1, 1, None))
         else:
             results.append(("entity_extraction", "skipped", 0, 0, extraction.get("reason")))
     except Exception as exc:
