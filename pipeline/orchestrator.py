@@ -111,6 +111,12 @@ def run(config: dict) -> int:
             n_anomalies = detect_anomalies(conn, config)
             results.append(("anomaly_detector", "ok", n_anomalies, n_anomalies, None))
             extra_lines = debug_report(conn)
+            from analysis.trends import run_trend_analysis
+            stats, trend_lines = run_trend_analysis(conn, config, run_id)
+            results.append(("trend_analysis", "ok",
+                            stats["entities"], stats["new"] + stats["updated"], None))
+            if trend_lines:
+                extra_lines += [""] + trend_lines
         else:
             results.append(("entity_extraction", "skipped", 0, 0, extraction.get("reason")))
     except Exception as exc:
