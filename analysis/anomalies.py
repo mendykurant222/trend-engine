@@ -73,6 +73,7 @@ def detect_anomalies(conn, config: dict, target_date: date | None = None) -> int
     ne_min_sources = int(acfg.get("new_entity_min_sources", 2))
     xs_window = int(acfg.get("cross_source_window_days", 14))
     xs_bonus = float(acfg.get("cross_source_bonus", 2.0))
+    weights = acfg.get("source_weights", {}) or {}          # plan item 40
     target_date = target_date or date.today()
 
     conn.execute("delete from anomalies where signal_date = %s", (target_date,))
@@ -136,6 +137,10 @@ def detect_anomalies(conn, config: dict, target_date: date | None = None) -> int
             }))
 
     for eid, source, kind, score, details in found:
+        weight = float(weights.get(source, 1.0))
+        if weight != 1.0 and source != "multi":
+            score = max(1, min(100, round(score * weight)))
+            details = {**details, "source_weight": weight}
         conn.execute(
             """insert into anomalies (entity_id, source, signal_date, kind, score, details)
                values (%s, %s, %s, %s, %s, %s)""",

@@ -81,11 +81,28 @@ sources:
     timespan_days: 90             # one call returns the full daily timeline
     max_queries: 20
 
+  research:
+    enabled: true                 # plan item 36 — free RSS; Gartner blocks bots, skipped
+    lookback_days: 14
+    max_per_feed: 15
+    feeds:
+      - { name: ark-invest, url: "https://ark-invest.com/feed/" }
+      - { name: cb-insights, url: "https://www.cbinsights.com/research/feed/" }
+      - { name: mckinsey, url: "https://www.mckinsey.com/insights/rss" }
+
 signals:
   min_mentions_threshold: 3       # entity must clear this before entering anomaly math (plan item 17)
 
 anomalies:
   poisson_p_threshold: 0.001      # plan item 20 — Poisson tail probability, not naive z-score
+  source_weights:                 # plan item 40 — reliability weight multiplies anomaly scores
+    tiktok: 1.0
+    google_trends: 0.9            # rising-query seeds can be noisy
+    reddit: 1.0
+    amazon: 1.1                   # purchase behavior > chatter
+    sec_edgar: 1.2                # corporate filings = highest-conviction mentions
+    gdelt: 0.7                    # news volume is broad and noisy
+    research: 1.1
   acceleration_ratio: 2.0         # velocity must double week-over-week
   cross_source_window_days: 14    # plan item 21 — sources lag each other; not simultaneity
   cross_source_bonus: 2.0

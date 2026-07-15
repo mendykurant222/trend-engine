@@ -21,6 +21,7 @@ from collectors.base import BaseCollector
 from collectors.gdelt import GdeltCollector
 from collectors.google_trends import GoogleTrendsCollector
 from collectors.reddit import RedditCollector
+from collectors.research import ResearchCollector
 from collectors.sec_edgar import SecEdgarCollector
 from collectors.tiktok import TikTokCollector
 from pipeline import db
@@ -37,6 +38,7 @@ COLLECTORS: list[type[BaseCollector]] = [
     TikTokCollector,
     SecEdgarCollector,
     GdeltCollector,
+    ResearchCollector,
 ]
 
 
@@ -141,6 +143,20 @@ def run(config: dict) -> int:
         any_failed = True
         results.append(("entity_extraction", "failed", 0, 0, str(exc)))
         log.exception("extraction/signals/anomalies failed")
+
+    # source health (plan item 48): a source that failed TWICE in a row
+    # gets a dedicated Telegram alert, not just a line in the summary
+    from reports.channels import esc, send_telegram
+    for name, st, _, _, err in results:
+        if st != "failed":
+            continue
+        prev = conn.execute(
+            """select status from run_collectors
+               where collector = %s and run_id < %s
+               order by run_id desc limit 1""", (name, run_id)).fetchone()
+        if prev and prev[0] == "failed":
+            send_telegram(f"🔴 <b>Source down: {esc(name)}</b>\n"
+                          f"Failed 2 consecutive runs.\n{esc(str(err)[:200])}")
 
     spend = db.month_spend(conn)
     status = "partial" if any_failed else "ok"

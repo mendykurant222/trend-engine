@@ -178,4 +178,110 @@ trends:
     takeoff: 2020-08
     mainstream: 2021-04
     outcome: real
+
+  # --- week-4 expansion (plan item 23): 12 more, hype-heavy on purpose ---
+
+  - name: sleepy-girl-mocktail
+    category: food-beverage
+    aliases: [tart cherry juice magnesium, sleep mocktail]
+    takeoff: 2024-01
+    mainstream: 2024-02
+    outcome: hype
+    tickers: []
+    notes: weeks-long TikTok sleep-drink fad — spike-and-die benchmark
+
+  - name: cirkul
+    category: consumer-products
+    aliases: [cirkul water bottle, cirkul cartridge]
+    takeoff: 2023-03
+    mainstream: 2024-01
+    outcome: real
+    tickers: []
+
+  - name: hoka
+    category: fashion
+    aliases: [hoka shoes, hoka one one]
+    takeoff: 2021-06
+    mainstream: 2023-01
+    outcome: real
+    tickers: [DECK]
+    notes: clean trend → parent-company ticker case (Deckers)
+
+  - name: on-running
+    category: fashion
+    aliases: [on cloud shoes, on cloudmonster]
+    takeoff: 2021-09
+    mainstream: 2023-06
+    outcome: real
+    tickers: [ONON]
+
+  - name: prebiotic-soda
+    category: food-beverage
+    aliases: [olipop, poppi]
+    takeoff: 2022-05
+    mainstream: 2024-03
+    outcome: real
+    tickers: [PEP]
+    notes: Poppi acquired by PepsiCo 2025 — the exact exit this engine should foreshadow
+
+  - name: berberine
+    category: wellness
+    aliases: [berberine supplement, natures ozempic]
+    takeoff: 2023-05
+    mainstream: 2023-07
+    outcome: hype
+    tickers: []
+    notes: marketed as natural ozempic — fast spike, faded within months
+
+  - name: bakuchiol
+    category: wellness
+    aliases: [bakuchiol serum, retinol alternative]
+    takeoff: 2022-01
+    mainstream: 2023-06
+    outcome: real
+    tickers: []
+
+  - name: cottage-cheese-revival
+    category: food-beverage
+    aliases: [cottage cheese ice cream, whipped cottage cheese]
+    takeoff: 2023-04
+    mainstream: 2023-08
+    outcome: real
+    tickers: []
+    notes: category revival (not a new product) — tests non-product trend handling
+
+  - name: tube-girl
+    category: fashion
+    aliases: [tube girl effect]
+    takeoff: 2023-09
+    mainstream: 2023-10
+    outcome: hype
+    tickers: []
+    notes: creator meme, ~6-week lifespan
+
+  - name: watertok
+    category: food-beverage
+    aliases: [water recipes, flavored water packets, waterlyte]
+    takeoff: 2023-03
+    mainstream: 2023-05
+    outcome: hype
+    tickers: []
+
+  - name: jellycat
+    category: toys
+    aliases: [jellycat plush, jellycat bartholomew]
+    takeoff: 2023-06
+    mainstream: 2024-11
+    outcome: real
+    tickers: []
+    notes: long slow ramp — opposite temporal profile to fidget spinners
+
+  - name: rhode
+    category: wellness
+    aliases: [rhode lip case, rhode peptide treatment]
+    takeoff: 2023-08
+    mainstream: 2025-02
+    outcome: real
+    tickers: [ELF]
+    notes: acquired by e.l.f. Beauty 2025 — second acquisition-exit benchmark
     tickers: []

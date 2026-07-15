@@ -66,7 +66,7 @@ def build_weekly_report(conn, config: dict, target_date: date | None = None) -> 
     if died:
         lines.append(f"\n<b>Moved to graveyard</b>: {esc(', '.join(r[0] for r in died))}")
 
-    # prediction performance — plan item 32
+    # prediction performance + automated precision metric — plan items 32, 47
     lines += ["", "<b>Prediction performance</b>"]
     any_perf = False
     for days_back in (14, 30):
@@ -74,15 +74,21 @@ def build_weekly_report(conn, config: dict, target_date: date | None = None) -> 
         if not rows:
             continue
         any_perf = True
+        hits = 0
         lines.append(f"  <i>reported {days_back}d ago:</i>")
         for name, s_then, stage_then, s_now, stage_now, status in rows:
+            # a call "held up" if the trend is still active and kept >=70% of
+            # its reported strength — the continuous precision definition
+            held = status == "active" and s_now >= s_then * 0.7
+            hits += held
             if status != "active":
                 verdict = "❌ dead"
             elif s_now >= s_then:
                 verdict = f"✅ {s_then}→{s_now}"
             else:
-                verdict = f"⚠️ {s_then}→{s_now}"
+                verdict = f"{'⚠️' if held else '❌'} {s_then}→{s_now}"
             lines.append(f"    {esc(name)}: {verdict} ({esc(stage_then)}→{esc(stage_now)})")
+        lines.append(f"  <b>Precision ({days_back}d): {100 * hits // len(rows)}%</b> ({hits}/{len(rows)})")
     if not any_perf:
         lines.append("  (no trends old enough to grade yet)")
 

@@ -106,6 +106,8 @@ def item_text(source: str, payload: dict) -> str | None:
     if source == "google_trends" and payload.get("type") == "rising_queries":
         queries = [r.get("query", "") for r in payload.get("rising", [])]
         return "Rising search queries: " + ", ".join(q for q in queries if q)
+    if source == "research" and payload.get("type") == "research_post":
+        return f"{payload.get('publisher')}: {payload.get('title')}\n{(payload.get('summary') or '')[:500]}"
     if source == "tiktok" and payload.get("type") == "creative_center":
         row = payload.get("row", {})
         return (f"TikTok trending {row.get('type', 'hashtag')}: {row.get('name')} "

@@ -124,7 +124,7 @@
 <div class="wrap">
   <header>
     <h1>📈 Trend Engine — Progress Tracker</h1>
-    <p class="sub">Updated <b>15.07.2026 (night)</b> · <b>4 sources live</b> · <b>Dashboard: <a href="https://trend-engine-dashboard.vercel.app">trend-engine-dashboard.vercel.app</a></b> · DB: Neon · Reports: Telegram · Month spend: <b class="mono">$0.30</b></p>
+    <p class="sub">Updated <b>15.07.2026 (night)</b> · <b>5 sources live</b> · <b>Dashboard: <a href="https://trend-engine-dashboard.vercel.app">trend-engine-dashboard.vercel.app</a></b> · DB: Neon · Reports: Telegram · Month spend: <b class="mono">$0.44</b></p>
   </header>
 
   <section class="summary" aria-label="Overall summary">
@@ -254,8 +254,9 @@ const ITEMS = [
     note:"Sequence bonus tiktok→reddit→amazon — week-4 calibration" },
   { n:22, p:2, t:"Daily debug report for calibration", d:"Top anomalies with baseline and details", s:"tested",
     note:"Included in the Telegram summary" },
-  { n:23, p:2, t:"Expand ground truth to 30+", d:"Incl. dead trends; first calibration run", s:"todo",
-    w:"Real data from the sources (week 4)" },
+  { n:23, p:2, t:"Expand ground truth to 30+", d:"Incl. dead trends; first calibration run", s:"partial",
+    w:"Calibration run needs a few weeks of real data",
+    note:"List expanded to 32 trends (23 real / 8 hype / 1 seasonal), incl. two acquisition-exit benchmarks (Poppi→PEP, Rhode→ELF)" },
 
   { n:24, p:3, t:"Clustering", d:"Two-stage: deterministic trend memory → Sonnet with the active-trends list; schema-enforced JSON", s:"tested",
     note:"Tested live: two pool-lighting entities merged into one trend" },
@@ -281,12 +282,14 @@ const ITEMS = [
     note:"Dashboard already remote: Vercel serverless at trend-engine-dashboard.vercel.app ($0). Collectors stay on GitHub Actions until they outgrow it — then a VPS takes both" },
   { n:35, p:5, t:"SEC EDGAR", d:"Free, official — trend mentions from company filings", s:"tested",
     note:"LIVE via full-text search (EDGAR has no call transcripts — filings instead, which also return the exact company + ticker). Test: pickleball → CaliberCos (CWD) 8-K found" },
-  { n:36, p:5, t:"Research reports", d:"McKinsey, Gartner, CB Insights, ARK — auto-summarized into structured trends", s:"todo" },
+  { n:36, p:5, t:"Research reports", d:"McKinsey, Gartner, CB Insights, ARK — auto-summarized into structured trends", s:"tested",
+    note:"LIVE via RSS (ARK, CB Insights, McKinsey; Gartner blocks bots). 29 posts on first run — flows through the same entity extraction as everything else" },
   { n:37, p:5, t:"News", d:"NewsAPI or GDELT (free)", s:"tested",
     note:"LIVE via GDELT volume timelines — one call per entity returns ~90 days of daily article counts (feeds anomalies + cross-source like any source)" },
   { n:38, p:5, t:"YouTube Data API", d:"View volumes by topic", s:"todo", w:"Google API key (free) — when we get there" },
   { n:39, p:5, t:"Instagram via third party", d:"Budget-dependent — not critical", s:"todo" },
-  { n:40, p:5, t:"Per-source reliability weight", d:"In the overall score", s:"todo" },
+  { n:40, p:5, t:"Per-source reliability weight", d:"In the overall score", s:"tested",
+    note:"config anomalies.source_weights — SEC filings 1.2, Amazon 1.1, news 0.7; multiplies anomaly scores" },
 
   { n:41, p:6, t:"Dashboard web app", d:"Live trends + per-trend page with charts, entities, companies, and drill-down to the raw items", s:"tested",
     note:"LIVE at trend-engine-dashboard.vercel.app (Vercel serverless, $0): trend list, lifecycle chart, per-source sparklines, evidence + raw-item drill-down. Also runs locally (python -m dashboard.app)" },
@@ -301,10 +304,10 @@ const ITEMS = [
 
   { n:46, p:7, t:"Full backtesting", d:"Against the expanded ground truth; final threshold calibration", s:"todo",
     w:"Backfill (item 10)" },
-  { n:47, p:7, t:"Automated feedback loop", d:"Continuous precision metric, reported weekly", s:"partial",
-    note:"The minimal version (trend_reports + weekly grading) is already live" },
-  { n:48, p:7, t:"Health checks per collector", d:"Alert when a source goes down", s:"partial",
-    note:"Failures already reported in the daily summary; a dedicated alert — not yet" },
+  { n:47, p:7, t:"Automated feedback loop", d:"Continuous precision metric, reported weekly", s:"tested",
+    note:"Weekly report now computes Precision(14d/30d): a call held up if the trend is still active at >=70% of reported strength" },
+  { n:48, p:7, t:"Health checks per collector", d:"Alert when a source goes down", s:"done",
+    note:"🔴 dedicated Telegram alert fires when a source fails 2 consecutive runs; every failure still lands in the daily summary" },
   { n:49, p:7, t:"Backups, secrets, rate limits", d:"", s:"partial",
     note:"Secrets in .env + encrypted GitHub; retry + rate limiting in BaseCollector; external backup/retention — not yet" },
   { n:50, p:7, t:"Claude cost optimization", d:"Prompt caching, Batch API, pre-filtering before sending", s:"todo" },
