@@ -1,0 +1,316 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מנוע גילוי טרנדים — מעקב התקדמות</title>
+<style>
+  :root {
+    --bg: #F4F6F7; --surface: #FFFFFF; --ink: #182226; --muted: #5B6B70;
+    --line: #DCE3E5; --accent: #0E7C66; --num: #7A8A8E;
+    --c-tested: #0E7C66; --c-done: #4C9A7A; --c-partial: #B77817;
+    --c-key: #5B5BD6; --c-ext: #4A6FA5; --c-todo: #9AA7AB;
+    --shadow: 0 1px 2px rgba(24,34,38,.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0F1618; --surface: #172124; --ink: #E4EBE9; --muted: #90A3A6;
+      --line: #243235; --accent: #38B79C; --num: #6E8388;
+      --c-tested: #38B79C; --c-done: #63B08D; --c-partial: #D99A3D;
+      --c-key: #8D8DF0; --c-ext: #7C9CC9; --c-todo: #5F7076;
+      --shadow: none;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0F1618; --surface: #172124; --ink: #E4EBE9; --muted: #90A3A6;
+    --line: #243235; --accent: #38B79C; --num: #6E8388;
+    --c-tested: #38B79C; --c-done: #63B08D; --c-partial: #D99A3D;
+    --c-key: #8D8DF0; --c-ext: #7C9CC9; --c-todo: #5F7076;
+    --shadow: none;
+  }
+  :root[data-theme="light"] {
+    --bg: #F4F6F7; --surface: #FFFFFF; --ink: #182226; --muted: #5B6B70;
+    --line: #DCE3E5; --accent: #0E7C66; --num: #7A8A8E;
+    --c-tested: #0E7C66; --c-done: #4C9A7A; --c-partial: #B77817;
+    --c-key: #5B5BD6; --c-ext: #4A6FA5; --c-todo: #9AA7AB;
+    --shadow: 0 1px 2px rgba(24,34,38,.05);
+  }
+  * { box-sizing: border-box; }
+  html { direction: rtl; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.55 -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  }
+  .mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+          font-variant-numeric: tabular-nums; }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 32px 20px 80px; }
+
+  header h1 { font-size: 1.45rem; margin: 0 0 2px; letter-spacing: -.01em; text-wrap: balance; }
+  header .sub { color: var(--muted); font-size: .85rem; margin: 0 0 20px; }
+  header .sub b { color: var(--accent); }
+
+  .summary { background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+             padding: 18px 20px; box-shadow: var(--shadow); margin-bottom: 28px; }
+  .totals { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  .totals .pct { font-size: 1.9rem; font-weight: 700; color: var(--accent); }
+  .totals .lbl { color: var(--muted); font-size: .85rem; }
+  .bar { display: flex; height: 12px; border-radius: 6px; overflow: hidden; background: var(--line); }
+  .bar span { height: 100%; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .chip { border: 1px solid var(--line); background: transparent; color: var(--ink);
+          border-radius: 999px; padding: 4px 12px; font-size: .8rem; cursor: pointer;
+          display: inline-flex; align-items: center; gap: 6px; font-family: inherit; }
+  .chip .dot { width: 9px; height: 9px; border-radius: 50%; }
+  .chip .n { color: var(--muted); font-size: .75rem; }
+  .chip[aria-pressed="true"] { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+  .chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .phase { margin-bottom: 26px; }
+  .phase-head { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .phase-head h2 { font-size: 1.02rem; margin: 0; }
+  .phase-head .weeks { color: var(--muted); font-size: .78rem; }
+  .phase-head .mini { flex: 1; max-width: 140px; height: 6px; border-radius: 3px;
+                      background: var(--line); overflow: hidden; }
+  .phase-head .mini i { display: block; height: 100%; background: var(--accent); }
+  .phase-head .mini-lbl { color: var(--muted); font-size: .75rem; }
+
+  .items { background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+           box-shadow: var(--shadow); overflow: hidden; }
+  .item { display: grid; grid-template-columns: 44px 1fr 190px 118px;
+          gap: 6px 14px; padding: 11px 14px; border-top: 1px solid var(--line);
+          align-items: start; }
+  .item:first-child { border-top: 0; }
+  .item .num { color: var(--num); font-weight: 600; padding-top: 1px; }
+  .item .title { font-weight: 600; }
+  .item .desc { color: var(--muted); font-size: .84rem; margin-top: 2px; }
+  .item .note { font-size: .84rem; margin-top: 3px; color: var(--ink); }
+  .item .note::before { content: "↩ "; color: var(--accent); }
+  .item .wait { font-size: .82rem; color: var(--muted); padding-top: 2px; }
+  .item .wait b { color: var(--ink); font-weight: 600; }
+  .status { justify-self: start; font-size: .78rem; font-weight: 600; border-radius: 999px;
+            padding: 3px 10px; white-space: nowrap;
+            color: var(--sc); background: color-mix(in srgb, var(--sc) 13%, transparent); }
+  .item.dim { opacity: .55; }
+  .hidden { display: none; }
+
+  footer { color: var(--muted); font-size: .78rem; margin-top: 30px; }
+
+  @media (max-width: 720px) {
+    .item { grid-template-columns: 36px 1fr; }
+    .item .wait { grid-column: 2; }
+    .status { grid-column: 2; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .bar span, .phase-head .mini i { transition: width .4s ease; }
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>📈 מנוע גילוי טרנדים — מעקב התקדמות</h1>
+    <p class="sub">עודכן <b>15.07.2026</b> · ריפו: trend-engine · DB: Neon · דיווח: Telegram · הוצאה החודש: <b class="mono">$0.03</b></p>
+  </header>
+
+  <section class="summary" aria-label="סיכום כללי">
+    <div class="totals">
+      <span class="pct mono" id="pct"></span>
+      <span class="lbl" id="pct-lbl"></span>
+    </div>
+    <div class="bar" id="bar" role="img" aria-label="התפלגות סטטוסים"></div>
+    <div class="chips" id="chips" role="group" aria-label="סינון לפי סטטוס"></div>
+  </section>
+
+  <main id="phases"></main>
+
+  <footer>
+    בסיס: התוכנית המוסכמת (51 סעיפים, ללא שלב המוצר — שימוש אישי בלבד). "בוצע ונבדק" = קוד + טסט אוטומטי/בדיקה חיה שעברו.
+    העמוד מתעדכן בכל סשן עבודה.
+  </footer>
+</div>
+
+<script>
+const STATUSES = {
+  tested:  { label: "בוצע ונבדק", color: "var(--c-tested)",  weight: 1 },
+  done:    { label: "בוצע",       color: "var(--c-done)",    weight: 1 },
+  partial: { label: "חלקי",       color: "var(--c-partial)", weight: .5 },
+  key:     { label: "מחכה למנדי", color: "var(--c-key)",     weight: 0 },
+  ext:     { label: "גורם חיצוני", color: "var(--c-ext)",    weight: 0 },
+  todo:    { label: "טרם",        color: "var(--c-todo)",    weight: 0 },
+};
+
+const PHASES = [
+  { id: 0, title: "שלב 0 — תשתית + Ground Truth", weeks: "שבוע 1" },
+  { id: 1, title: "שלב 1 — 4 מקורות ליבה", weeks: "שבועות 2–3" },
+  { id: 2, title: "שלב 2 — זיהוי חריגות", weeks: "שבוע 4" },
+  { id: 3, title: "שלב 3 — מוח Claude", weeks: "שבועות 5–6" },
+  { id: 4, title: "שלב 4 — דוחות", weeks: "שבוע 7" },
+  { id: 5, title: "שלב 5 — השכבה הפיננסית", weeks: "שבועות 8–10" },
+  { id: 6, title: "שלב 6 — דשבורד אישי", weeks: "שבועות 11–13" },
+  { id: 7, title: "שלב 7 — הקשחה", weeks: "שבועות 14–16" },
+];
+
+// { n, p: phase, t: original request, d: description detail, s: status, w: waiting-on, note: what was done }
+const ITEMS = [
+  { n:1,  p:0, t:"ריפו Git עם מבנה מלא", d:"collectors / pipeline / analysis / db / reports / dashboard / config", s:"tested",
+    note:"קיים ודחוף ל-GitHub (mendykurant222/trend-engine)" },
+  { n:2,  p:0, t:"סביבת Python + config.yaml מרכזי", d:"מקורות פעילים, ספים, קטגוריות, תקציב", s:"tested" },
+  { n:3,  p:0, t:"PostgreSQL מנוהל", d:"תוכנן Supabase — בפועל Neon; תוכנית retention ל-raw ישן", s:"tested",
+    note:"Neon חי; 18 טבלאות" },
+  { n:4,  p:0, t:"סכמת DB מלאה", d:"entities+aliases+היסטוריית מיזוגים, raw_items+hash, daily_signals, anomalies, trend_clusters+ראיות, companies, runs, api_costs, llm_calls, trend_reports", s:"tested" },
+  { n:5,  p:0, t:"מחלקת BaseCollector", d:"ממשק אחיד, retry, rate limiting, לוגים, מעקב עלות", s:"tested" },
+  { n:6,  p:0, t:"Orchestrator", d:"מריץ הכל, מתעד כל ריצה וכל עלות API", s:"tested" },
+  { n:7,  p:0, t:"תזמון יומי ב-GitHub Actions", d:"10:30 UTC; קריאות API בלבד — בלי scraping מ-IP של Actions", s:"done",
+    note:"workflow + כל ה-secrets מוגדרים; ריצות ידניות אומתו, ריצת cron ראשונה תאומת מחר" },
+  { n:8,  p:0, t:"סיכום ריצה יומי", d:"הצליח/נכשל, כמה נאסף, כמה עלה", s:"tested",
+    note:"מגיע לטלגרם שלך; מייל יופעל עם Resend" },
+  { n:9,  p:0, t:"Ground Truth — רשימת טרנדים מתויגת", d:"15–20 טרנדים ידועים + תאריכי המראה + הגדרת הצלחה (north star)", s:"done",
+    note:"20 טרנדים ב-data/ground_truth.yaml, כולל hype להבחנה" },
+  { n:10, p:0, t:"Backfill היסטורי", d:"Google Trends / Keepa / Reddit אחורה — בייסליינים אמיתיים מהיום הראשון", s:"todo",
+    w:"מפתחות המקורות (סעיפים 12–15)" },
+  { n:11, p:0, t:"הקמת ספקי API + תקציב כולל", d:"$300/חודש לכל המערכת, מעקב שוטף ב-api_costs", s:"partial",
+    w:"חשבונות SerpApi / Keepa / Apify — מנדי", note:"מעקב העלויות חי ($0.03 החודש); הדרכת מפתחות נמסרה" },
+
+  { n:12, p:1, t:"Google Trends דרך API בתשלום", d:"SerpApi כמסלול ראשי (pytrends מת) + נרמול anchor query", s:"key",
+    w:"SERPAPI_KEY — חינם 100 חיפושים/חודש להתחלה", note:"הקולקטור כתוב ומוכן" },
+  { n:13, p:1, t:"Reddit API", d:"18 סאברדיטים להתחלה (יעד 100–200 לפי קטגוריות)", s:"ext",
+    w:"אישור Reddit לבקשת האפליקציה; אחרי אישור — ריפו הופך לפרטי", note:"הקולקטור כתוב ומוכן" },
+  { n:14, p:1, t:"Amazon — Movers & Shakers + Best Sellers", d:"דרך Keepa, לא scraping עצמי", s:"key",
+    w:"KEEPA_KEY — ‏~€49/חודש (אפשר לדחות)", note:"הקולקטור כתוב ומוכן" },
+  { n:15, p:1, t:"TikTok Creative Center", d:"דרך Apify; משמש גם benchmark לכיול", s:"key",
+    w:"APIFY_TOKEN — חינם $5 קרדיט/חודש", note:"הקולקטור כתוב; בחירת actor עליי" },
+  { n:16, p:1, t:"חילוץ ישויות עם Claude Haiku", d:"באצ'ים + איחוד aliases + היסטוריית מיזוגים הפיכה", s:"tested",
+    note:"נבדק חי מול ה-API: labubu, ryze mushroom coffee; ‏$0.001 לבאץ'. שדרוג embeddings — שבוע 4" },
+  { n:17, p:1, t:"Signals Builder", d:"mentions + score_sum יומיים לכל ישות, עם סף מינימום", s:"tested" },
+
+  { n:18, p:2, t:"בייסליין לכל ישות", d:"לפי אותו יום בשבוע (עונתיות) על 8 שבועות + fallback ל-28 יום", s:"tested" },
+  { n:19, p:2, t:"Velocity + acceleration", d:"קצב שינוי שבוע-מול-שבוע — הלב של גילוי מוקדם", s:"tested" },
+  { n:20, p:2, t:"ניקוד Poisson + new entity surge", d:"מודל Poisson לדאטה דליל (לא z-score); ישות חדשה דורשת 2+ מקורות", s:"tested" },
+  { n:21, p:2, t:"Cross-source bonus", d:"חלון 14 יום (לא בו-זמניות) — ציון ×2", s:"tested",
+    note:"בונוס רצף tiktok→reddit→amazon — לכיול שלב 2" },
+  { n:22, p:2, t:"דוח דיבאג יומי לכיול", d:"טופ חריגות עם בייסליין ופירוט", s:"tested", note:"משולב בסיכום הטלגרם" },
+  { n:23, p:2, t:"הרחבת Ground Truth ל-30+", d:"כולל טרנדים שמתו; הרצת כיול ראשונה", s:"todo",
+    w:"דאטה אמיתי מהמקורות (שבוע 4)" },
+
+  { n:24, p:3, t:"Clustering", d:"דו-שלבי: trend memory דטרמיניסטי → Sonnet עם רשימת הטרנדים הפעילים; פלט JSON כפוי-סכמה", s:"tested",
+    note:"נבדק חי: שתי ישויות תאורת-בריכה אוחדו לטרנד אחד" },
+  { n:25, p:3, t:"קטגוריה, שלב, עוצמה + ביטחון", d:"ציון עוצמה 1–100 וציון ביטחון נפרד; כל הראיות נשמרות ל-drill-down", s:"tested" },
+  { n:26, p:3, t:"מיפוי השקעתי", d:"Sonnet מציע — נשמר רק מה שמאומת מול טבלת SEC ‏(10,428 חברות)", s:"tested",
+    note:"נבדק חי: בריכות → POOL/LESL/HAYW; ‏Celsius → CELH מהותי-חיובי, MNST מהותי-שלילי" },
+  { n:27, p:3, t:"Trend memory", d:"התאמה לפי חפיפת ישויות (לא שם); היסטוריית lifecycle", s:"tested",
+    note:"יום שני עם אותן ישויות = 0 כפילויות, lifecycle מצטבר" },
+  { n:28, p:3, t:"מדיניות עלויות Claude", d:"Haiku לסינון, Sonnet לניתוח, Batch API ‏-50%; יעד <$100/חודש", s:"partial",
+    note:"Haiku+Sonnet+מעקב עלויות חיים; מעבר ל-Batch API — שלב 7 (סעיף 50)" },
+  { n:29, p:3, t:"שמירת prompt+response", d:"בדיקת איכות שבועית לשיפור", s:"done",
+    note:"הכל נשמר ב-llm_calls; ריטואל הבדיקה יתחיל עם דאטה אמיתי" },
+
+  { n:30, p:4, t:"דוח יומי", d:"טלגרם + מייל HTML — טופ-5 טרנדים + תובנת השקעה + לינק לפירוט", s:"tested",
+    note:"★ = חשיפה מהותית, ‎+/− כיוון; דוגמה נשלחה לטלגרם שלך. מייל מחכה ל-Resend" },
+  { n:31, p:4, t:"התראות push לקיצון בלבד", d:"רק cross-source surge בציון 90+ — סף גבוה בכוונה", s:"tested" },
+  { n:32, p:4, t:"דוח שבועי + ביצועי תחזיות", d:"טבלת \"דווח לפני 14/30 יום → מה קרה\" — feedback loop מינימלי מהיום הראשון", s:"tested",
+    note:"רץ אוטומטית בימי שני" },
+  { n:33, p:4, t:"דו-לשוני", d:"תקציר עברית, פירוט אנגלית", s:"tested" },
+
+  { n:34, p:5, t:"מעבר ל-VPS + Docker", d:"$10–20/חודש — כשהריצות יכבדו מדי ל-Actions", s:"todo" },
+  { n:35, p:5, t:"SEC EDGAR", d:"חינם, רשמי — Claude מחלץ אזכורי מגמות מכל דוח רבעוני", s:"todo", note:"הבא בתור — לא דורש מפתח" },
+  { n:36, p:5, t:"דוחות מחקר", d:"McKinsey, Gartner, CB Insights, ARK — סיכום אוטומטי למגמות", s:"todo" },
+  { n:37, p:5, t:"חדשות", d:"NewsAPI או GDELT (חינם)", s:"todo" },
+  { n:38, p:5, t:"YouTube Data API", d:"נפחי צפיות לפי נושא", s:"todo", w:"מפתח Google API (חינם) — כשנגיע" },
+  { n:39, p:5, t:"Instagram דרך צד ג'", d:"לפי תקציב — לא קריטי", s:"todo" },
+  { n:40, p:5, t:"משקל אמינות למקור", d:"בחישוב הציון הכולל", s:"todo" },
+
+  { n:41, p:6, t:"אפליקציית דשבורד", d:"טרנדים חיים + עמוד לטרנד עם גרפים, ישויות, חברות, ו-drill-down עד הפריט הגולמי", s:"todo" },
+  { n:42, p:6, t:"חיפוש ופילטרים", d:"קטגוריה, שלב, עוצמה, ביטחון", s:"todo" },
+  { n:43, p:6, t:"Watchlist אישי", d:"עם התראות מוגברות", s:"todo" },
+  { n:44, p:6, t:"עמוד Graveyard", d:"טרנדים שמתו — ללמידה מה אמיתי ומה הייפ", s:"todo" },
+  { n:45, p:6, t:"הגנת גישה פשוטה", d:"משתמש יחיד — בלי multi-tenancy", s:"todo" },
+
+  { n:46, p:7, t:"Backtesting מלא", d:"מול רשימת ה-ground truth המורחבת; כיול סופי", s:"todo", w:"backfill (סעיף 10)" },
+  { n:47, p:7, t:"Feedback loop אוטומטי", d:"מדד precision רציף, מדווח שבועית", s:"partial",
+    note:"הגרסה המינימלית (trend_reports + ציון בדוח השבועי) כבר חיה" },
+  { n:48, p:7, t:"Health checks לכל Collector", d:"התראה כשמקור נופל", s:"partial",
+    note:"כשלים כבר מדווחים בסיכום היומי; התראת קיצון ייעודית — טרם" },
+  { n:49, p:7, t:"גיבויים, סודות, rate limits", d:"", s:"partial",
+    note:"secrets ב-env+GitHub מוצפן; retry+rate-limit ב-BaseCollector; retention/גיבוי חיצוני — טרם" },
+  { n:50, p:7, t:"אופטימיזציית עלויות Claude", d:"prompt caching, Batch API, סינון לפני שליחה", s:"todo" },
+  { n:51, p:7, t:"תיעוד מלא", d:"כך שקבלן יוכל להיכנס בעתיד", s:"partial", note:"README מקיף קיים; תיעוד עומק — שלב 7" },
+];
+
+let filter = null;
+
+function render() {
+  // summary
+  const counts = {};
+  for (const k in STATUSES) counts[k] = 0;
+  let weight = 0;
+  for (const it of ITEMS) { counts[it.s]++; weight += STATUSES[it.s].weight; }
+  const pct = Math.round(100 * weight / ITEMS.length);
+  document.getElementById("pct").textContent = pct + "%";
+  document.getElementById("pct-lbl").textContent =
+    `${counts.tested + counts.done} מתוך ${ITEMS.length} סעיפים הושלמו (${counts.tested} מהם נבדקו) · ${counts.partial} חלקיים`;
+
+  const bar = document.getElementById("bar");
+  bar.innerHTML = "";
+  for (const k of ["tested","done","partial","key","ext","todo"]) {
+    const s = document.createElement("span");
+    s.style.width = (100 * counts[k] / ITEMS.length) + "%";
+    s.style.background = STATUSES[k].color;
+    if (k === "todo") s.style.opacity = ".35";
+    bar.appendChild(s);
+  }
+
+  const chips = document.getElementById("chips");
+  chips.innerHTML = "";
+  const all = document.createElement("button");
+  all.className = "chip"; all.setAttribute("aria-pressed", filter === null);
+  all.innerHTML = `הכל <span class="n mono">${ITEMS.length}</span>`;
+  all.onclick = () => { filter = null; render(); };
+  chips.appendChild(all);
+  for (const k of ["tested","done","partial","key","ext","todo"]) {
+    const b = document.createElement("button");
+    b.className = "chip"; b.setAttribute("aria-pressed", filter === k);
+    b.innerHTML = `<span class="dot" style="background:${STATUSES[k].color}"></span>
+                   ${STATUSES[k].label} <span class="n mono">${counts[k]}</span>`;
+    b.onclick = () => { filter = (filter === k ? null : k); render(); };
+    chips.appendChild(b);
+  }
+
+  // phases
+  const main = document.getElementById("phases");
+  main.innerHTML = "";
+  for (const ph of PHASES) {
+    const items = ITEMS.filter(i => i.p === ph.id);
+    const shown = items.filter(i => !filter || i.s === filter);
+    if (filter && shown.length === 0) continue;
+    const w = items.reduce((a, i) => a + STATUSES[i.s].weight, 0);
+    const phPct = Math.round(100 * w / items.length);
+
+    const sec = document.createElement("section");
+    sec.className = "phase";
+    sec.innerHTML = `
+      <div class="phase-head">
+        <h2>${ph.title}</h2>
+        <span class="weeks">${ph.weeks}</span>
+        <span class="mini"><i style="width:${phPct}%"></i></span>
+        <span class="mini-lbl mono">${phPct}%</span>
+      </div>`;
+    const list = document.createElement("div");
+    list.className = "items";
+    for (const it of items) {
+      const hide = filter && it.s !== filter;
+      const st = STATUSES[it.s];
+      const row = document.createElement("div");
+      row.className = "item" + (hide ? " hidden" : "") + (it.s === "todo" ? " dim" : "");
+      row.innerHTML = `
+        <div class="num mono">${it.n}</div>
+        <div>
+          <div class="title">${it.t}</div>
+          ${it.d ? `<div class="desc">${it.d}</div>` : ""}
+          ${it.note ? `<div class="note">${it.note}</div>` : ""}
+        </div>
+        <div class="wait">${it.w ? `⏳ מחכה ל: <b>${it.w}</b>` : ""}</div>
+        <div class="status" style="--sc:${st.color}">${st.label}</div>`;
+      list.appendChild(row);
+    }
+    sec.appendChild(list);
+    main.appendChild(sec);
+  }
+}
+render();
+</script>
