@@ -53,6 +53,9 @@ mentioned in social media texts, for a trend-tracking system.
 Rules:
 - Only SPECIFIC products, brands, or nameable product trends (e.g. "stanley tumbler", \
 "dubai chocolate", "cold plunge tub"). NOT generic nouns ("water bottle", "chocolate", "shoes").
+- NEVER return a public corporation or mega-brand by itself ("apple", "tesla", "meta", \
+"nike", "walmart") — corporations are not consumer trends. A specific product, model, or \
+line IS valid ("tesla model y", "nike vaporfly", "apple vision pro").
 - canonical name: English, lowercase, singular, no brand suffixes like "tm".
 - category: one of consumer-products, gaming, fashion, home, gadgets, food-beverage, wellness, toys.
 - A text with no specific product/brand/trend mentions gets an empty mentions list.

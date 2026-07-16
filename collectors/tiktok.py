@@ -1,19 +1,32 @@
-"""TikTok Creative Center via Apify actor (plan item 15).
+"""TikTok Creative Center collector (plan items 15, 60).
 
-The most important consumer-trend source and the most fragile — no official API.
-Needs APIFY_TOKEN + an actor id in config (pick one in Phase 1; several
-"tiktok creative center" actors exist on Apify).
+Pulls the trending-hashtags ranking PER INDUSTRY via the doliz Apify actor —
+the category depth the original plan asked for, not just the global top-100.
+Works without TikTok cookies (verified live). Industry IDs were mapped by
+probing (see docs/ARCHITECTURE.md); labels are ours.
 
-Also serves as a calibration benchmark: TikTok CC's own ranked trend lists are
-ground truth — if our system misses what TikTok already declares trending, we
-have a bug (plan items 15, 22).
+Also a calibration benchmark: TikTok's own per-industry top-10 vs our
+detector (analysis/benchmark.py).
 """
 
 import os
+from datetime import date
 
 from .base import BaseCollector, CollectorError
 
-APIFY_RUN_SYNC = "https://api.apify.com/v2/acts/{actor_id}/run-sync-get-dataset-items"
+RUN_SYNC = ("https://api.apify.com/v2/acts/"
+            "doliz~tiktok-creative-center-scraper/run-sync-get-dataset-items")
+
+DEFAULT_INDUSTRIES = [
+    {"id": "", "label": "all"},
+    {"id": "14000000000", "label": "beauty"},
+    {"id": "15000000000", "label": "tech"},
+    {"id": "18000000000", "label": "household"},
+    {"id": "21000000000", "label": "home"},
+    {"id": "22000000000", "label": "ecommerce"},
+    {"id": "25000000000", "label": "games"},
+    {"id": "27000000000", "label": "food"},
+]
 
 
 class TikTokCollector(BaseCollector):
@@ -24,28 +37,48 @@ class TikTokCollector(BaseCollector):
     def ready(self) -> str | None:
         if not os.environ.get("APIFY_TOKEN"):
             return "APIFY_TOKEN not set"
-        if not self.config.get("actor_id"):
-            return "no Apify actor_id configured (sources.tiktok.actor_id)"
         return None
 
     def fetch(self) -> list[dict]:
-        actor = self.config["actor_id"].replace("/", "~")
-        resp = self.request(
-            "POST", APIFY_RUN_SYNC.format(actor_id=actor),
-            params={"token": os.environ["APIFY_TOKEN"]},
-            json=self.config.get("actor_input", {}),
-            timeout=300,
-        )
-        self.add_cost("actor_run", 1, float(self.config.get("cost_per_run_usd", 0.10)))
-        rows = resp.json()
-        if not isinstance(rows, list):
-            raise CollectorError(f"unexpected Apify response: {str(rows)[:200]}")
-        items = []
-        for row in rows:
-            day = (row.get("scrapedAt") or "")[:10] or None
-            items.append({
-                "external_id": f"{row.get('type')}:{row.get('name')}:{day}",
-                "item_date": day,
-                "payload": {"type": "creative_center", "row": row},
-            })
+        industries = self.config.get("industries") or DEFAULT_INDUSTRIES
+        limit = int(self.config.get("hashtags_limit", 25))
+        period = str(self.config.get("period_days", 7))
+        country = self.config.get("country", "US")
+        cost = float(self.config.get("cost_per_run_usd", 0.05))
+        today = date.today().isoformat()
+
+        items: list[dict] = []
+        for ind in industries:
+            try:
+                resp = self.request(
+                    "POST", RUN_SYNC,
+                    params={"token": os.environ["APIFY_TOKEN"]},
+                    json={"target": "trending_hashtags",
+                          "hashtags_country": country,
+                          "hashtags_period": period,
+                          "hashtags_industry": ind["id"],
+                          "hashtags_limit": limit,
+                          "cookies": ""},
+                    timeout=300,
+                )
+            except CollectorError as exc:
+                self.log.warning("industry %s failed: %s", ind["label"], exc)
+                continue
+            self.add_cost(f"hashtags_{ind['label']}", 1, cost)
+            data = resp.json()
+            rows = (data[0].get("items") or []) if isinstance(data, list) and data else []
+            for i, h in enumerate(rows):
+                items.append({
+                    "external_id": f"hashtag:{ind['label']}:{h.get('hashtagName')}:{today}",
+                    "item_date": today,
+                    "payload": {"type": "creative_center", "row": {
+                        "type": "hashtag",
+                        "name": h.get("hashtagName"),
+                        "rank": h.get("rankIndex") or i + 1,
+                        "videoViews": h.get("vv"),
+                        "publishCnt": h.get("publishCnt"),
+                        "industry": ind["label"],
+                    }},
+                })
+            self.log.info("industry %s: %d hashtags", ind["label"], len(rows))
         return items

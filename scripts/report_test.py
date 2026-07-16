@@ -95,8 +95,9 @@ def main() -> int:
                               ("day 16", "trend age")]:
             if needle not in daily:
                 failures.append(f"daily report missing {label} ({needle!r})")
-        if len(reported) != 2:
-            failures.append(f"expected 2 reported trends, got {len(reported)}")
+        # real trends coexist with the demo ones — assert containment, not count
+        if not set(ids["clusters"]).issubset(set(reported)):
+            failures.append(f"demo trends missing from report: {ids['clusters']} vs {reported}")
         log_reported(conn, reported)
 
         alerts = check_alerts(conn, config)

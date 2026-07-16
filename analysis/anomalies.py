@@ -131,8 +131,27 @@ def detect_anomalies(conn, config: dict, target_date: date | None = None) -> int
 
     # ---- new entity surge: cross-source by construction ----
     window_start = target_date - timedelta(days=ne_window)
+
+    # established public companies are never "new" consumer entities (item 23:
+    # 'apple' trending in the news is not a product discovery). Specific
+    # products keep flagging — 'tesla model y' doesn't match 'Tesla, Inc.'
+    candidates = [eid for eid, seen in first_seen.items() if seen >= window_start]
+    established: set[int] = set()
+    if candidates:
+        established = {r[0] for r in conn.execute(
+            """select e.id from entities e
+               where e.id = any(%s) and exists (
+                 select 1 from companies c
+                 where lower(c.name) = e.canonical_name
+                    or lower(c.name) like e.canonical_name || ' %%'
+                    or lower(c.name) like e.canonical_name || ',%%')""",
+            (candidates,)).fetchall()}
+        if established:
+            log.info("new-entity damping: %d established company names skipped",
+                     len(established))
+
     for eid, seen in first_seen.items():
-        if seen < window_start:
+        if seen < window_start or eid in established:
             continue
         total, sources = 0.0, set()
         for (e2, source), s in series.items():

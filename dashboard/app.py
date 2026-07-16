@@ -128,7 +128,7 @@ def snippet(source: str, payload: dict) -> str:
         return "Rising: " + ", ".join(r.get("query", "") for r in rising[:6])
     if source == "tiktok":
         row = payload.get("row", {})
-        return f"{row.get('name')} (rank {row.get('rank')}, {row.get('trend')})"
+        return f"#{row.get('name')} (rank {row.get('rank')} in {row.get('industry', 'all')})"
     if source == "sec_edgar":
         return f"{payload.get('company')} — {payload.get('form')}"
     if source == "gdelt":

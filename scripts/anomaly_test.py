@@ -70,6 +70,13 @@ def seed(conn):
         sig("fresh-thing", i, 2)
         sig("fresh-thing", i, 2 - (i % 2), source=SRC_B)
 
+    # nike: same new-entity profile, but matches "NIKE, Inc." in the SEC
+    # companies table -> established-brand damping must suppress it (item 23)
+    mk_entity("nike", 3)
+    for i in range(0, 3):
+        sig("nike", i, 2)
+        sig("nike", i, 2, source=SRC_B)
+
     return entities
 
 
@@ -115,6 +122,8 @@ def main() -> int:
             failures.append("ramping-lamp acceleration NOT detected")
         if ("fresh-thing", "new_entity") not in kinds:
             failures.append("fresh-thing new_entity NOT detected")
+        if any(name == "nike" for name, _ in kinds):
+            failures.append("nike flagged despite established-brand damping")
 
         # sequence bonus (item 61): leading fired 5d before today's lagging source
         seq = conn.execute(

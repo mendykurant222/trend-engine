@@ -92,6 +92,22 @@ def build_weekly_report(conn, config: dict, target_date: date | None = None) -> 
     if not any_perf:
         lines.append("  (no trends old enough to grade yet)")
 
+    # engine quality digest (plan item 29's weekly review, automated)
+    llm_rows = conn.execute(
+        """select purpose, count(*), coalesce(sum(cost_usd), 0)
+           from llm_calls where created_at >= %s
+           group by purpose order by 3 desc""", (week_ago,)).fetchall()
+    new_entities = conn.execute(
+        "select count(*) from entities where first_seen >= %s", (week_ago,)).fetchone()[0]
+    merges = conn.execute(
+        """select count(*) from entity_aliases
+           where created_at >= %s and (source like 'trgm%%' or source like 'haiku%%')""",
+        (week_ago,)).fetchone()[0]
+    lines += ["", "<b>Engine quality (7d)</b>",
+              f"  🏷️ {new_entities} new entities · {merges} fuzzy alias merges"]
+    for purpose, count, cost in llm_rows:
+        lines.append(f"  🤖 {esc(purpose)}: {count} calls, ${float(cost):.2f}")
+
     lines += ["", f"💰 Month-to-date spend: ${float(spend):.2f}"]
     return "\n".join(lines)
 

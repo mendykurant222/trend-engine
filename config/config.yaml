@@ -18,28 +18,185 @@ categories:
 sources:
   reddit:
     enabled: true
-    # Phase 1 starter list — expand toward 100-200 (plan item 13)
+    # Full breadth list (items 65/75) — ~150 subs across every consumer
+    # category, pre-loaded so Reddit approval activates the wide funnel
+    # instantly. A missing/renamed sub logs a warning and is skipped.
     subreddits:
+      # shopping & product discovery
       - BuyItForLife
-      - gadgets
-      - kitchenconfidential
-      - Cooking
-      - malefashionadvice
-      - femalefashionadvice
-      - SkincareAddiction
-      - HomeImprovement
-      - gaming
-      - boardgames
-      - fitness
-      - Supplements
-      - Coffee
-      - tea
-      - EatCheapAndHealthy
       - shutupandtakemymoney
       - INEEEEDIT
       - ProductPorn
+      - DidntKnowIWantedThat
+      - amazonfinds
+      - GoodValue
+      - frugal
+      - deals
+      - dupes
+      # gadgets & tech
+      - gadgets
+      - hardware
+      - smarthome
+      - homeautomation
+      - Ereader
+      - headphones
+      - mechanicalkeyboards
+      - drones
+      - 3Dprinting
+      - raspberry_pi
+      - VirtualReality
+      - GoPro
+      - dashcams
+      # kitchen & food gear
+      - kitchenconfidential
+      - Cooking
+      - castiron
+      - espresso
+      - Coffee
+      - tea
+      - AirFryer
+      - slowcooking
+      - sousvide
+      - Baking
+      - Sourdough
+      - MealPrepSunday
+      - EatCheapAndHealthy
+      - fermentation
+      - HotSauce
+      - snackexchange
+      - energydrinks
+      - Soda
+      - CostcoFinds
+      - traderjoes
+      - Aldi
+      # fashion & footwear
+      - malefashionadvice
+      - femalefashionadvice
+      - streetwear
+      - Sneakers
+      - RepLadies
+      - handbags
+      - Watches
+      - jewelry
+      - ThriftStoreHauls
+      - OUTFITS
+      - techwearclothing
+      # beauty & personal care
+      - SkincareAddiction
+      - 30PlusSkinCare
+      - MakeupAddiction
+      - beauty
+      - HaircareScience
+      - curlyhair
+      - Nails
+      - fragrance
+      - Sephora
+      # home & garden
+      - HomeImprovement
+      - homedecorating
+      - InteriorDesign
+      - IKEA
+      - organization
+      - CleaningTips
+      - houseplants
+      - gardening
+      - BackyardOrchard
+      - Landscaping
+      - grilling
+      - poolcare
+      - hottub
+      # health, fitness & wellness
+      - fitness
+      - homegym
+      - running
+      - cycling
+      - yoga
+      - Pilates
+      - Supplements
+      - Nootropics
+      - sleep
+      - SkincareAddicts
+      - intermittentfasting
+      - WeightLossAdvice
+      - PelotonCycle
+      - GarminWatches
+      - AppleWatch
+      - whoop
+      - ColdShowers
+      - saunas
+      # gaming & toys
+      - gaming
+      - boardgames
+      - Games
+      - NintendoSwitch
+      - PS5
+      - XboxSeriesX
+      - pcgaming
+      - Lego
+      - legodeals
+      - Squishmallow
+      - ActionFigures
+      - Gunpla
+      - tradingcardcommunity
+      - PokemonTCG
+      - sportscards
+      - funkopop
+      # collectibles & hobbies
+      - Plushies
+      - dolls
+      - ArtisanKeycaps
+      - fountainpens
+      - notebooks
+      - sticker
+      - Embroidery
+      - crochet
+      - knitting
+      - woodworking
+      - resincasting
+      # pets
+      - dogs
+      - cats
+      - DogGear
+      - petproducts
+      - aquariums
+      - reptiles
+      # parenting & kids
+      - Parenting
+      - NewParents
+      - BabyBumps
+      - beyondthebump
+      - toddlers
+      - Mommit
+      - daddit
+      # outdoors & travel gear
+      - CampingGear
+      - hiking
+      - Ultralight
+      - onebag
+      - travel
+      - EDC
+      - flashlight
+      - kayaking
+      - Fishing
+      - skiing
+      - Snowboarding
+      - surfing
+      - pickleball
+      - golf
+      - tennis
+      # cars & mobility
+      - cars
+      - electricvehicles
+      - ebikes
+      - Escooters
+      - teslamotors
+      # trends & culture
+      - popculturechat
+      - OutOfTheLoop
+      - trendingsubreddits
+      - TikTokCringe
     listing: hot                  # hot | top | rising
-    posts_per_subreddit: 50
+    posts_per_subreddit: 25       # 150 subs x 25 = ~3,750 posts/day
 
   google_trends:
     enabled: true
@@ -79,14 +236,12 @@ sources:
 
   tiktok:
     enabled: true
-    provider: apify
-    actor_id: automation-lab/tiktok-trends-scraper   # Creative Center trends
-    actor_input:
-      trendType: hashtag
-      countryCode: US
-      period: 7
-      maxResults: 100
-    cost_per_run_usd: 0.10
+    provider: apify                 # doliz creative-center actor, per-industry (item 60)
+    hashtags_limit: 20              # actor max
+    period_days: 7
+    country: US
+    cost_per_run_usd: 0.05          # ~8 industry runs/day ≈ $0.40/day
+    # industries: override DEFAULT_INDUSTRIES in collectors/tiktok.py if needed
 
   sec_edgar:
     enabled: true                 # free official API, no key (plan item 35)
