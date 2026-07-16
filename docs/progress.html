@@ -138,7 +138,7 @@
 
   <section class="card flow" aria-label="How the engine works">
     <h2>⚙️ How the engine works — end to end</h2>
-    <p>The daily pipeline, from raw internet chatter to an investable insight. Fully automated; every step below is built and running.</p>
+    <p>The daily pipeline, from raw internet chatter to an early trend call — spotting products and consumer shifts weeks before they go mainstream. Fully automated; every step below is built and running.</p>
     <div class="steps">
       <div class="step"><div class="bubble">1</div><div>
         <h3>Collect</h3>
@@ -166,13 +166,13 @@
         <p class="how"><b>Under the hood:</b> Claude Sonnet with structured output; a deterministic "trend memory" updates existing trends by entity overlap so nothing gets double-counted day over day.</p>
       </div></div>
       <div class="step"><div class="bubble">6</div><div>
-        <h3>Map to stocks</h3>
-        <p class="what">Each trend is mapped to publicly traded companies exposed to it — manufacturer, retailer, or supplier; long or short — with a materiality flag (does this actually move the company's revenue?).</p>
-        <p class="how"><b>Under the hood:</b> AI proposes, but only tickers verified against the official SEC registry (10,428 companies) are ever stored — the model cannot invent a symbol.</p>
+        <h3>So what? — opportunity lenses</h3>
+        <p class="what">The core output is the discovered trend itself: what's rising, how fast, at what stage, with what evidence — the raw material for product, sourcing, and content decisions <i>before the crowd arrives</i>. On top of that, each trend also gets a public-market lens: which listed companies are exposed (manufacturer / retailer / supplier, long or short, material or not), for when a consumer trend is big enough to touch stocks.</p>
+        <p class="how"><b>Under the hood:</b> the market lens is a secondary layer — AI proposes, but only tickers verified against the official SEC registry (10,428 companies) are ever stored; the model cannot invent a symbol.</p>
       </div></div>
       <div class="step"><div class="bubble">7</div><div>
         <h3>Report, alert, self-grade</h3>
-        <p class="what">A daily Telegram report delivers the top trends with their tickers; extreme multi-source surges trigger instant alerts; and every Monday the engine grades its own past calls — what it flagged 14 and 30 days ago vs what happened.</p>
+        <p class="what">A daily Telegram report delivers the top trends — stage, momentum, and the evidence behind each; extreme multi-source surges trigger instant alerts; and every Monday the engine grades its own past calls — what it flagged 14 and 30 days ago vs what happened.</p>
         <p class="how"><b>Under the hood:</b> every reported trend is logged, so precision is measurable from week one. Watchlisted trends alert at a lower threshold.</p>
       </div></div>
       <div class="step"><div class="bubble">8</div><div>
@@ -181,13 +181,14 @@
         <p class="how"><b>Under the hood:</b> every AI prompt, response, and cent of cost is logged to the database. Current all-in running cost: under $1/day.</p>
       </div></div>
     </div>
-    <p class="takeaway"><b>The thesis:</b> consumer trends surface on TikTok and Reddit weeks before they reach Amazon rankings, news, and earnings calls. This engine watches all of those layers simultaneously, scores the lag statistically, and turns it into named, graded, stock-mapped trends — automatically, every day.</p>
+    <p class="takeaway"><b>The thesis:</b> consumer trends surface on TikTok and Reddit weeks before they reach Amazon rankings, news, and earnings calls. This engine watches all of those layers simultaneously, scores the lag statistically, and catches trends while they're still early — then you choose what to do with them: source the product, ride the content wave, or trade the exposure. Automatically, every day.</p>
   </section>
 
   <main id="phases"></main>
 
   <footer>
-    Based on the agreed plan (51 items; product phase removed — personal use only).
+    Based on the agreed plan — 51 original items, extended to 74 after the 15.07 review
+    (product phase removed — personal use only).
     "Tested" = code plus a passing automated test or live verification. Updated every working session.
   </footer>
 </div>
@@ -211,6 +212,8 @@ const PHASES = [
   { id: 5, title: "Phase 5 — Financial Layer", weeks: "Weeks 8–10" },
   { id: 6, title: "Phase 6 — Personal Dashboard", weeks: "Weeks 11–13" },
   { id: 7, title: "Phase 7 — Hardening", weeks: "Weeks 14–16" },
+  { id: 8, title: "Phase 8 — Fixes & Calibration", weeks: "Review round 1 · added 15.07" },
+  { id: 9, title: "Phase 9 — Dashboard v2 (UX)", weeks: "Review round 1 · added 15.07" },
 ];
 
 // { n, p: phase, t: original request, d: description, s: status, w: waiting on, note: what was done }
@@ -313,6 +316,38 @@ const ITEMS = [
   { n:50, p:7, t:"Claude cost optimization", d:"Prompt caching, Batch API, pre-filtering before sending", s:"todo" },
   { n:51, p:7, t:"Full documentation", d:"So a contractor could onboard in the future", s:"partial",
     note:"Comprehensive README exists; deep docs — phase 7" },
+
+  // ---- Phase 8: everything the 15.07 review found (audit scorecard + new suggestions) ----
+  { n:52, p:8, t:"Reframe outputs product-first", d:"Primary use case set 15.07: product/business opportunities; the stock map is a secondary lens", s:"done",
+    note:"Flow page step 6 rewritten ('So what? — opportunity lenses'), thesis rewritten, daily report ticker line relabeled 'market lens'" },
+  { n:53, p:8, t:"Google Trends historical backfill", d:"SerpApi TIMESERIES per watched entity — real baselines like GDELT already has; closes the oldest open gap from audit #1", s:"todo" },
+  { n:54, p:8, t:"Fuzzy alias resolution", d:"pg_trgm similarity on aliases + Haiku merge verdicts logged in entity_merges — stops entity fragmentation before real data accumulates", s:"todo" },
+  { n:55, p:8, t:"Backtest harness on news history", d:"Replay the 32 ground-truth trends through the detector using GDELT date-ranged queries → first real recall + lead-time numbers", s:"todo" },
+  { n:56, p:8, t:"TikTok benchmark check", d:"Hashtags rising in TikTok's own list that our detector missed get logged as 'missed benchmark' — free daily calibration (audit #16)", s:"todo" },
+  { n:57, p:8, t:"Dead-man's switch", d:"Telegram alert if no run is recorded for 30+ hours — catches the whole pipeline silently stopping", s:"todo" },
+  { n:58, p:8, t:"Verify first scheduled cron run", d:"Actions workflow is configured; scheduling counts as proven only after the first firing", s:"ext",
+    w:"First cron fires 16.07 at 10:30 UTC" },
+  { n:59, p:8, t:"Seed-query tuning + per-category rising queries", d:"'viral product' returns news noise; original plan wanted rising queries PER CATEGORY", s:"todo",
+    w:"Seed swap doable now; per-category coverage needs the paid SerpApi tier (Mendy's call)" },
+  { n:60, p:8, t:"TikTok category depth", d:"Current actor returns the generic US top-100; the plan wanted category-level Creative Center data — the weakest source vs original intent", s:"todo" },
+  { n:61, p:8, t:"Cross-source sequence bonus", d:"Extra score when sources fire in the expected order (tiktok → reddit/news → amazon) — leftover from audit #7", s:"todo" },
+  { n:62, p:8, t:"Extraction pre-filter", d:"Skip evergreen hashtags/queries (#fyp, #viral…) before they reach Haiku — cost control ahead of Reddit scale", s:"todo" },
+  { n:63, p:8, t:"CI: tests on every push", d:"The 4 test scripts (smoke, anomaly, trends, report) run automatically in Actions, not just when remembered", s:"todo" },
+  { n:64, p:8, t:"Raw-data retention job", d:"Prune payloads older than ~120 days, keep row + hash for dedupe (closes audit #12 properly)", s:"todo" },
+  { n:65, p:8, t:"Expand Reddit to 100–200 subreddits", d:"Original plan's target; 18 configured as starters", s:"ext",
+    w:"Reddit app approval" },
+
+  // ---- Phase 9: dashboard v2 — UX findings from the review ----
+  { n:66, p:9, t:"Engine liveness home", d:"Last run + status, next-run countdown, live counts — fixes the 'looks dead during warm-up' empty state (the #1 UX issue)", s:"todo" },
+  { n:67, p:9, t:"Entities page", d:"Browse every tracked entity with sparklines BEFORE trends form — gives the dashboard value from day one", s:"todo" },
+  { n:68, p:9, t:"Anomalies feed page", d:"Today's anomalies with scores and baselines — watch the engine think; doubles as the calibration view", s:"todo" },
+  { n:69, p:9, t:"Telegram deep links", d:"Every reported trend links to its dashboard page — was in the original spec of item 30, now possible with the public URL", s:"todo" },
+  { n:70, p:9, t:"Sparkline time labels", d:"First/last date + peak marker — sparklines currently have no time reference", s:"todo" },
+  { n:71, p:9, t:"Trend list sorting", d:"Newest-first and confidence sort toggles (strength-only today)", s:"todo" },
+  { n:72, p:9, t:"Mobile card layout", d:"Dashboard tables collapse to cards on phones — most checks will happen from Telegram → phone browser", s:"todo" },
+  { n:73, p:9, t:"Login hardening", d:"Secure cookie flag (HTTPS) + failed-attempt throttle", s:"todo" },
+  { n:74, p:9, t:"Key rotation coordination", d:"The Anthropic key is shared with the platform project that has leaked git history", s:"key",
+    w:"Mendy rotates the key; I update trend-engine .env + GitHub secret in the same step" },
 ];
 
 let filter = null;

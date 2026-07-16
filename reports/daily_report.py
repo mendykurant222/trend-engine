@@ -77,8 +77,8 @@ def build_daily_report(conn, config: dict, target_date: date | None = None) -> t
                 mark = DIRECTION_MARK.get(direction, "?")
                 star = "★" if material else ""
                 parts.append(f"{esc(ticker)}{mark}{star}")
-            lines.append(f"    💼 {' '.join(parts)}")
-    lines += ["", "<i>★ = material exposure | + long / − short signal</i>"]
+            lines.append(f"    💼 market lens: {' '.join(parts)}")
+    lines += ["", "<i>💼 = public-market lens (secondary) · ★ material · +/− direction</i>"]
     return "\n".join(lines), [t["id"] for t in trends]
 
 
