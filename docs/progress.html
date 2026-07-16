@@ -187,7 +187,7 @@
   <main id="phases"></main>
 
   <footer>
-    Based on the agreed plan — 51 original items, extended to 74 after the 15.07 review
+    Based on the agreed plan — 51 original items, extended to 76 after two review rounds on 15.07
     (product phase removed — personal use only).
     "Tested" = code plus a passing automated test or live verification. Updated every working session.
   </footer>
@@ -283,8 +283,8 @@ const ITEMS = [
 
   { n:34, p:5, t:"Move to VPS + Docker", d:"$10–20/month — when runs outgrow GitHub Actions", s:"partial",
     note:"Dashboard already remote: Vercel serverless at trend-engine-dashboard.vercel.app ($0). Collectors stay on GitHub Actions until they outgrow it — then a VPS takes both" },
-  { n:35, p:5, t:"SEC EDGAR", d:"Free, official — trend mentions from company filings", s:"tested",
-    note:"LIVE via full-text search (EDGAR has no call transcripts — filings instead, which also return the exact company + ticker). Test: pickleball → CaliberCos (CWD) 8-K found" },
+  { n:35, p:5, t:"SEC EDGAR / earnings calls", d:"Original ask: earnings-CALL transcripts (what CEOs actually say). Delivered: filings full-text search", s:"partial",
+    note:"Filings search is LIVE and useful (pickleball → CaliberCos CWD 8-K), but it is narrower than the plan's intent — the qualitative color lives in call transcripts, which EDGAR doesn't host. Dedicated transcripts source → item 76" },
   { n:36, p:5, t:"Research reports", d:"McKinsey, Gartner, CB Insights, ARK — auto-summarized into structured trends", s:"tested",
     note:"LIVE via RSS (ARK, CB Insights, McKinsey; Gartner blocks bots). 29 posts on first run — flows through the same entity extraction as everything else" },
   { n:37, p:5, t:"News", d:"NewsAPI or GDELT (free)", s:"tested",
@@ -348,6 +348,13 @@ const ITEMS = [
   { n:73, p:9, t:"Login hardening", d:"Secure cookie flag (HTTPS) + failed-attempt throttle", s:"todo" },
   { n:74, p:9, t:"Key rotation coordination", d:"The Anthropic key is shared with the platform project that has leaked git history", s:"key",
     w:"Mendy rotates the key; I update trend-engine .env + GitHub secret in the same step" },
+
+  // ---- added 15.07 (night) from the external plan review ----
+  { n:75, p:8, t:"Breadth expansion program", d:"The vision was 'everything, including a pool lamp' — the funnel today is ~40 queries/day: 3 Trends seeds, 18 subreddits, 20 TikTok hashtags, 20-entity watchlists. Target: ~15 per-category seeds, 100-200 subreddits, per-category TikTok runs, 100-entity watchlists (~$100-150/mo, well inside the $300 budget)", s:"key",
+    w:"Two decisions: SerpApi paid tier ($75/mo) and extra Apify runs (~$25/mo); Reddit part unblocks with approval",
+    note:"Named explicitly per the external review: with today's funnel the engine catches big trends late, not small trends early" },
+  { n:76, p:8, t:"Earnings-call transcripts source", d:"The Wall Street color layer the plan actually asked for — 'we're seeing incredible demand for X' — via a dedicated transcripts API (API Ninjas / FMP), Claude extracting product mentions + sentiment", s:"key",
+    w:"Pick a provider (~$0-30/mo) — needed only if the Wall-Street layer matters to you" },
 ];
 
 let filter = null;
