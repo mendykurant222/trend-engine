@@ -148,7 +148,7 @@
 <div class="wrap">
   <header>
     <h1>📈 Trend Engine — Progress Tracker</h1>
-    <p class="sub">Updated <b>16.07.2026 (noon)</b> · <b>7 sources live</b> · <b>First real trends detected</b> · Backtest: <b>93% early recall</b> · <b>Dashboard: <a href="https://trend-engine-dashboard.vercel.app">trend-engine-dashboard.vercel.app</a></b> · DB: Neon · Reports: Telegram · Month spend: <b class="mono">$0.99</b></p>
+    <p class="sub">Updated <b>16.07.2026 (evening)</b> · <b>7 sources live</b> · <b>First real trends detected</b> · Backtest: <b>93% early recall</b> · <b>Dashboard: <a href="https://trend-engine-dashboard.vercel.app">trend-engine-dashboard.vercel.app</a></b> · DB: Neon · Reports: Telegram · Month spend: <b class="mono">$1.75</b></p>
   </header>
 
   <section class="summary" aria-label="Overall summary">
@@ -348,9 +348,9 @@ const ITEMS = [
     note:"Sequence bonus tiktok→reddit→amazon — week-4 calibration" },
   { n:22, p:2, t:"Daily debug report for calibration", d:"Top anomalies with baseline and details", s:"tested",
     note:"Included in the Telegram summary" },
-  { n:23, p:2, t:"Expand ground truth to 30+", d:"Incl. dead trends; first calibration run", s:"partial",
-    w:"Calibration run needs a few weeks of real data",
-    note:"List expanded to 32 trends (23 real / 8 hype / 1 seasonal), incl. two acquisition-exit benchmarks (Poppi→PEP, Rhode→ELF)" },
+  { n:23, p:2, t:"Expand ground truth to 30+ & calibrate", d:"Incl. dead trends; calibration as real data accumulates", s:"partial",
+    w:"Full threshold calibration needs ~2 weeks of baselines",
+    note:"List at 32 trends (incl. Poppi→PEP, Rhode→ELF exit benchmarks). Calibration round 1 done 16.07: established-brand damping — entities matching SEC company names never flag as 'new' (killed the apple/meta noise, CI-tested) + extraction told corporations ≠ trends" },
 
   { n:24, p:3, t:"Clustering", d:"Two-stage: deterministic trend memory → Sonnet with the active-trends list; schema-enforced JSON", s:"tested",
     note:"Tested live: two pool-lighting entities merged into one trend" },
@@ -361,8 +361,8 @@ const ITEMS = [
     note:"Day 2 with the same entities = 0 duplicates, lifecycle accumulates" },
   { n:28, p:3, t:"Claude cost policy", d:"Haiku for filtering, Sonnet for analysis, Batch API −50%; target <$100/month", s:"partial",
     note:"Haiku + Sonnet + cost tracking live; Batch API move — phase 7 (item 50)" },
-  { n:29, p:3, t:"Save every prompt + response", d:"Weekly quality review", s:"done",
-    note:"Everything stored in llm_calls; the review ritual starts with real data" },
+  { n:29, p:3, t:"Save every prompt + response", d:"Weekly quality review", s:"tested",
+    note:"All calls stored in llm_calls + the Monday report carries an automated quality digest: new entities, fuzzy merges, LLM calls & cost by purpose" },
 
   { n:30, p:4, t:"Daily report", d:"Telegram + HTML email — top-5 trends + investment insight + link to detail", s:"tested",
     note:"★ = material exposure, +/− direction; sample delivered to your Telegram. Email waits for Resend" },
@@ -427,7 +427,8 @@ const ITEMS = [
     note:"Fired on schedule 16.07 (11:58 UTC — GitHub delays cron ~90min under load, as planned for). The run exposed two real issues, both fixed same day: GDELT rate-limit overruns (now time-budgeted) and Neon dropping idle connections during slow fetches (now auto-reconnecting with keepalives)" },
   { n:59, p:8, t:"Seed-query tuning + per-category rising queries", d:"'viral product' returned news noise; original plan wanted rising queries PER CATEGORY", s:"done",
     note:"SerpApi upgraded 15.07 → 15 per-category seeds/day (was 3 generic); the noisy seed was dropped" },
-  { n:60, p:8, t:"TikTok category depth", d:"Current actor returns the generic US top-100; the plan wanted category-level Creative Center data — the weakest source vs original intent", s:"todo" },
+  { n:60, p:8, t:"TikTok category depth", d:"Category-level Creative Center data — was the weakest source vs original intent", s:"tested",
+    note:"LIVE 16.07: per-industry trending hashtags (all + beauty, tech, household, home, ecommerce, games, food) with view counts — no cookies needed; ~$0.40/day. Industry IDs mapped by probing" },
   { n:61, p:8, t:"Cross-source sequence bonus", d:"Extra score when leading sources fire before lagging ones (tiktok/trends/youtube → news/amazon/filings)", s:"tested",
     note:"×1.25 on top of the cross-source bonus; verified in the anomaly test suite" },
   { n:62, p:8, t:"Extraction pre-filter", d:"Skip evergreen hashtags/queries before they reach Haiku", s:"tested",
@@ -436,8 +437,9 @@ const ITEMS = [
     note:"tests.yml: compile check + smoke + anomaly suites (report/trends tests stay local — they send Telegram / spend Sonnet)" },
   { n:64, p:8, t:"Raw-data retention job", d:"Prune payloads older than ~120 days, keep row + hash for dedupe", s:"done",
     note:"Runs inside the 6-hourly watchdog" },
-  { n:65, p:8, t:"Expand Reddit to 100–200 subreddits", d:"Original plan's target; 18 configured as starters", s:"ext",
-    w:"Reddit app approval" },
+  { n:65, p:8, t:"Expand Reddit to 100–200 subreddits", d:"Original plan's target", s:"ext",
+    w:"Reddit app approval — everything else is ready",
+    note:"~155 curated subreddits across 14 consumer categories pre-loaded 16.07; approval day = instant wide funnel (~3,750 posts/day)" },
 
   // ---- Phase 9: dashboard v2 — UX findings from the review ----
   { n:66, p:9, t:"Engine liveness home", d:"Last run + status, next-run countdown, anomalies-today — fixes the 'looks dead during warm-up' empty state", s:"tested",
