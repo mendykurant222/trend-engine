@@ -134,6 +134,7 @@ anomalies:
   new_entity_min_sources: 2
 
 reports:
+  dashboard_url: "https://trend-engine-dashboard.vercel.app"  # deep links (item 69)
   email_to: mkurant@bkonect.com
   telegram_enabled: true
   language: en                    # plan item 33 — changed 2026-07-15: English everywhere

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>🏷️ Entities</h1>
+<p class="muted">Every product, brand, and micro-trend the engine is tracking — before they form trends.</p>
+
+<div class="card">
+  <form class="filters" method="get">
+    <label>Search <input name="q" value="{{ q }}" placeholder="entity name"></label>
+    <button class="primary" type="submit">Filter</button>
+  </form>
+</div>
+
+<div class="card">
+  {% if entities %}
+  <table>
+    <tr><th>Entity</th><th>First seen</th><th>Mentions 14d</th><th>Sources</th><th>Last 30 days</th></tr>
+    {% for e in entities %}
+    <tr>
+      <td><b>{{ e.name }}</b><br><span class="muted small">{{ e.category or '—' }}</span></td>
+      <td class="mono small">{{ e.first_seen }}</td>
+      <td class="mono">{{ '%.0f' % e.m14 }}</td>
+      <td class="mono small" title="{{ e.sources }}">{{ e.n_sources }}</td>
+      <td>{{ e.spark }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <div class="empty">No entities yet — they appear as the daily runs read the sources.</div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,5 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
+<div class="card" style="display:flex; gap:22px; flex-wrap:wrap; align-items:center;">
+  <span>{{ '🟢' if live.status in ('ok', 'empty') else '🟡' if live.status == 'partial' else '🔴' }}
+    <b>Last run:</b> #{{ live.run_id or '—' }} · {{ live.ran_at }} · {{ live.status }} ({{ live.ok_steps }} steps ok)</span>
+  <span>⏭️ <b>Next run:</b> in ~{{ live.next_in_h }}h (daily 10:30 UTC)</span>
+  <span>🚨 <b>Anomalies today:</b> {{ live.anomalies_today }}</span>
+</div>
 <div class="card">
   <div class="statrow">
     <div><div class="bignum mono">{{ stats[0] }}</div><div class="lbl">active trends</div></div>
@@ -52,7 +58,9 @@
     {% endfor %}
   </table>
   {% else %}
-  <div class="empty">No trends match. The engine adds trends as anomalies cluster — check back after a few daily runs.</div>
+  <div class="empty">No trends yet — the engine opens a trend only when anomalies cluster across sources.
+    Meanwhile, watch the raw material forming on the <a href="{{ url_for('entities') }}">Entities</a>
+    and <a href="{{ url_for('anomalies') }}">Anomalies</a> pages.</div>
   {% endif %}
 </div>
 {% endblock %}

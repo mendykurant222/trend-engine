@@ -62,6 +62,8 @@
   <nav>
     <span class="brand">📈 Trend Engine</span>
     <a href="{{ url_for('index') }}" class="{{ 'active' if request.endpoint == 'index' }}">Trends</a>
+    <a href="{{ url_for('entities') }}" class="{{ 'active' if request.endpoint == 'entities' }}">Entities</a>
+    <a href="{{ url_for('anomalies') }}" class="{{ 'active' if request.endpoint == 'anomalies' }}">Anomalies</a>
     <a href="{{ url_for('graveyard') }}" class="{{ 'active' if request.endpoint == 'graveyard' }}">Graveyard</a>
     <span class="sp"></span>
     <a href="{{ url_for('logout') }}" class="muted">Log out</a>

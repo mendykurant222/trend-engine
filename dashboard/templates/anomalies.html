@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>🚨 Anomalies — last 7 days</h1>
+<p class="muted">Watch the engine think: every statistically unusual move, before and after it becomes a trend.</p>
+
+<div class="card">
+  {% if rows %}
+  <table>
+    <tr><th>Date</th><th>Entity</th><th>Source</th><th>Kind</th><th>Score</th><th>Detail</th></tr>
+    {% for r in rows %}
+    <tr>
+      <td class="mono small">{{ r[0] }}</td>
+      <td><b>{{ r[1] }}</b></td>
+      <td class="mono small">{{ r[2] }}</td>
+      <td>{{ r[3] }}{{ ' ×2' if r[5].get('cross_source') }}</td>
+      <td class="mono">{{ '%.0f' % r[4] }}</td>
+      <td class="muted small">
+        {% if r[3] == 'surge' %}{{ r[5].get('today') }} vs baseline {{ r[5].get('baseline_mean') }}
+        {% elif r[3] == 'acceleration' %}velocity {{ r[5].get('velocity_prev') }}→{{ r[5].get('velocity_now') }}/day
+        {% else %}{{ r[5].get('mentions_in_window') }} mentions, {{ (r[5].get('sources') or [])|length }} sources{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <div class="empty">No anomalies in the last 7 days — baselines are still forming. This page fills up as real data accumulates.</div>
+  {% endif %}
+</div>
+{% endblock %}

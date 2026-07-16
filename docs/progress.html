@@ -430,10 +430,14 @@ const ITEMS = [
     w:"Reddit app approval" },
 
   // ---- Phase 9: dashboard v2 — UX findings from the review ----
-  { n:66, p:9, t:"Engine liveness home", d:"Last run + status, next-run countdown, live counts — fixes the 'looks dead during warm-up' empty state (the #1 UX issue)", s:"todo" },
-  { n:67, p:9, t:"Entities page", d:"Browse every tracked entity with sparklines BEFORE trends form — gives the dashboard value from day one", s:"todo" },
-  { n:68, p:9, t:"Anomalies feed page", d:"Today's anomalies with scores and baselines — watch the engine think; doubles as the calibration view", s:"todo" },
-  { n:69, p:9, t:"Telegram deep links", d:"Every reported trend links to its dashboard page — was in the original spec of item 30, now possible with the public URL", s:"todo" },
+  { n:66, p:9, t:"Engine liveness home", d:"Last run + status, next-run countdown, anomalies-today — fixes the 'looks dead during warm-up' empty state", s:"tested",
+    note:"LIVE on the dashboard: 🟢 last run, steps ok, next run in Nh" },
+  { n:67, p:9, t:"Entities page", d:"Browse every tracked entity with sparklines BEFORE trends form", s:"tested",
+    note:"LIVE: /entities — 14-day mentions, source count, 30-day sparkline, search" },
+  { n:68, p:9, t:"Anomalies feed page", d:"Watch the engine think; doubles as the calibration view", s:"tested",
+    note:"LIVE: /anomalies — last 7 days with scores, baselines, cross-source marks" },
+  { n:69, p:9, t:"Telegram deep links", d:"Every reported trend links to its dashboard page (original spec of item 30)", s:"tested",
+    note:"Trend names in the daily report are now tappable links to the dashboard" },
   { n:70, p:9, t:"Sparkline time labels", d:"First/last date + peak marker — sparklines currently have no time reference", s:"todo" },
   { n:71, p:9, t:"Trend list sorting", d:"Newest-first and confidence sort toggles (strength-only today)", s:"todo" },
   { n:72, p:9, t:"Mobile card layout", d:"Dashboard tables collapse to cards on phones — most checks will happen from Telegram → phone browser", s:"todo" },
@@ -447,7 +451,8 @@ const ITEMS = [
     note:"15.07 progress: Trends seeds 3→15/day, Amazon 0→6 categories, EDGAR/GDELT watchlists 20→40 entities. TikTok and Reddit are the last narrow spots" },
   { n:76, p:8, t:"Earnings-call transcripts source", d:"The Wall Street color layer the plan actually asked for — 'we're seeing incredible demand for X' — via a dedicated transcripts API (API Ninjas / FMP), Claude extracting product mentions + sentiment", s:"key",
     w:"API Ninjas key is wired, but the transcripts endpoint turned out premium-only ($39/mo) — approve it, or we skip the Wall-Street layer for now" },
-  { n:77, p:8, t:"Amazon ASIN→title resolution", d:"Best-seller lists arrive as ASIN codes; resolving top movers to product titles (Keepa product API) lets entity extraction actually read the Amazon source", s:"todo" },
+  { n:77, p:8, t:"Amazon ASIN→title resolution", d:"Resolving best-seller codes to product titles so extraction can read the Amazon source", s:"tested",
+    note:"LIVE + tested: top-20 per category via Keepa product API, cached in asin_titles (repeat sellers cost 0 tokens); runs in the daily pipeline before extraction" },
 ];
 
 let filter = null;

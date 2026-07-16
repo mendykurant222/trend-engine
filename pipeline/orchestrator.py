@@ -107,6 +107,17 @@ def run(config: dict) -> int:
             for operation, units, cost in collector.costs:
                 db.record_cost(conn, run_id, collector.name, operation, units, cost)
 
+    # ASIN -> title resolution so extraction can read Amazon (plan item 77)
+    from pipeline.amazon_titles import resolve_asin_titles
+    try:
+        tstats = resolve_asin_titles(conn, config, run_id)
+        if tstats.get("categories"):
+            results.append(("asin_titles", "ok",
+                            tstats["resolved"], tstats["stored"], None))
+    except Exception as exc:
+        results.append(("asin_titles", "failed", 0, 0, str(exc)))
+        log.exception("asin title resolution failed")
+
     # pipeline steps after collection: extraction (Haiku) -> signals -> anomalies
     from analysis.anomalies import debug_report, detect_anomalies
     from pipeline.entities import run_extraction

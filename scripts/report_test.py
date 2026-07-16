@@ -91,6 +91,7 @@ def main() -> int:
         for needle, label in [("demo: solar pool lighting", "top trend"),
                               ("POOL", "ticker"), ("★", "material mark"),
                               ("active trends; strongest", "summary line"),
+                              ("/trend/", "dashboard deep link"),
                               ("day 16", "trend age")]:
             if needle not in daily:
                 failures.append(f"daily report missing {label} ({needle!r})")

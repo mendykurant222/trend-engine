@@ -64,10 +64,13 @@ def build_daily_report(conn, config: dict, target_date: date | None = None) -> t
         "",
         "<b>Top Trends</b>",
     ]
+    dash = config.get("reports", {}).get("dashboard_url", "").rstrip("/")
     for i, t in enumerate(trends, 1):
         age = (target_date - t["first_detected"]).days
+        name = (f'<a href="{dash}/trend/{t["id"]}">{esc(t["name"])}</a>'
+                if dash else f"<b>{esc(t['name'])}</b>")
         lines.append(
-            f"{i}. 📈 <b>{esc(t['name'])}</b> — {esc(t['stage'])} | "
+            f"{i}. 📈 {name} — {esc(t['stage'])} | "
             f"strength {t['strength']} | confidence {t['confidence']} | day {age}")
         if t["entities"]:
             lines.append(f"    {esc(', '.join(t['entities'][:6]))}")

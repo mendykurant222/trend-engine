@@ -141,6 +141,13 @@ create table if not exists trend_reports (
     unique (cluster_id, reported_date)
 );
 
+-- ASIN -> product title cache (plan item 77) — repeat best-sellers cost no tokens
+create table if not exists asin_titles (
+    asin       text primary key,
+    title      text not null,
+    updated_at timestamptz not null default now()
+);
+
 create table if not exists runs (
     id          bigserial primary key,
     started_at  timestamptz not null default now(),

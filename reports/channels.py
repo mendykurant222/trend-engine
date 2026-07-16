@@ -19,7 +19,8 @@ def send_telegram(text: str, html_mode: bool = True) -> bool:
     chat = os.environ.get("TELEGRAM_CHAT_ID")
     if not (token and chat):
         return False
-    payload = {"chat_id": chat, "text": text[:4000]}
+    payload = {"chat_id": chat, "text": text[:4000],
+               "disable_web_page_preview": True}
     if html_mode:
         payload["parse_mode"] = "HTML"
     try:

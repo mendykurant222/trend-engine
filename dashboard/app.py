@@ -154,6 +154,31 @@ def _list_params():
     }
 
 
+def _liveness(conn):
+    """Engine liveness for the home page (plan item 66)."""
+    from datetime import datetime, timezone
+    last = conn.execute(
+        """select id, started_at, finished_at, status,
+                  (select count(*) from run_collectors rc
+                   where rc.run_id = runs.id and rc.status = 'ok')
+           from runs order by id desc limit 1""").fetchone()
+    now = datetime.now(timezone.utc)
+    nxt = now.replace(hour=10, minute=30, second=0, microsecond=0)
+    if nxt <= now:
+        nxt += timedelta(days=1)
+    hours = (nxt - now).total_seconds() / 3600
+    anomalies_today = conn.execute(
+        "select count(*) from anomalies where signal_date = current_date").fetchone()[0]
+    return {
+        "run_id": last[0] if last else None,
+        "ran_at": last[1].strftime("%d.%m %H:%M UTC") if last else "never",
+        "status": last[3] if last else "—",
+        "ok_steps": last[4] if last else 0,
+        "next_in_h": round(hours, 1),
+        "anomalies_today": anomalies_today,
+    }
+
+
 @app.route("/")
 def index():
     conn = get_conn()
@@ -168,8 +193,54 @@ def index():
                (select coalesce(sum(cost_usd),0) from api_costs
                 where created_at >= date_trunc('month', now()))""").fetchone()
     return render_template("index.html", trends=trends, categories=categories,
-                           stats=stats, args=request.args,
+                           stats=stats, args=request.args, live=_liveness(conn),
                            stage_colors=STAGE_COLORS, title="Active trends")
+
+
+@app.route("/entities")
+def entities():
+    """Every tracked entity with recent momentum (plan item 67) —
+    the thing to watch while trends are still forming."""
+    conn = get_conn()
+    q = request.args.get("q", "").strip()
+    rows = conn.execute("""
+        select e.id, e.canonical_name, e.category, e.first_seen,
+               coalesce(sum(s.value) filter (where s.signal_date >= current_date - 13), 0) as m14,
+               count(distinct s.source) as n_sources,
+               coalesce(string_agg(distinct s.source, ',' order by s.source), '') as sources
+        from entities e
+        left join daily_signals s on s.entity_id = e.id and s.metric = 'mentions'
+        where e.status = 'active' and (%(q)s = '' or e.canonical_name ilike '%%' || %(q)s || '%%')
+        group by e.id
+        order by m14 desc, e.first_seen desc limit 200""", {"q": q}).fetchall()
+
+    since = date.today() - timedelta(days=29)
+    days = [since + timedelta(days=i) for i in range(30)]
+    ids = [r[0] for r in rows]
+    series: dict[int, dict] = {}
+    if ids:
+        for eid, d, v in conn.execute(
+            """select entity_id, signal_date, sum(value) from daily_signals
+               where entity_id = any(%s) and metric = 'mentions' and signal_date >= %s
+               group by 1, 2""", (ids, since)).fetchall():
+            series.setdefault(eid, {})[d] = float(v)
+    out = [{"id": r[0], "name": r[1], "category": r[2], "first_seen": r[3],
+            "m14": float(r[4]), "n_sources": r[5], "sources": r[6],
+            "spark": sparkline([series.get(r[0], {}).get(d, 0) for d in days])}
+           for r in rows]
+    return render_template("entities.html", entities=out, q=q, title="Entities")
+
+
+@app.route("/anomalies")
+def anomalies():
+    """The last 7 days of anomalies — watch the engine think (plan item 68)."""
+    conn = get_conn()
+    rows = conn.execute("""
+        select a.signal_date, e.canonical_name, a.source, a.kind, a.score, a.details
+        from anomalies a join entities e on e.id = a.entity_id
+        where a.signal_date >= current_date - 7
+        order by a.signal_date desc, a.score desc limit 200""").fetchall()
+    return render_template("anomalies.html", rows=rows, title="Anomalies")
 
 
 @app.route("/graveyard")
