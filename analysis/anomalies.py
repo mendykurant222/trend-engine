@@ -81,7 +81,15 @@ def detect_anomalies(conn, config: dict, target_date: date | None = None) -> int
     weights = acfg.get("source_weights", {}) or {}          # plan item 40
     target_date = target_date or date.today()
 
-    conn.execute("delete from anomalies where signal_date = %s", (target_date,))
+    # idempotent recompute — but anomalies already cited as trend evidence
+    # must survive (FK + they are part of a trend's audit trail)
+    conn.execute(
+        """delete from anomalies a where a.signal_date = %s
+           and not exists (select 1 from trend_evidence te where te.anomaly_id = a.id)""",
+        (target_date,))
+    kept = set(conn.execute(
+        "select entity_id, source, kind from anomalies where signal_date = %s",
+        (target_date,)).fetchall())
     series, first_seen = _load_history(conn, target_date)
 
     found = []  # (entity_id, source, kind, score, details)
@@ -142,6 +150,8 @@ def detect_anomalies(conn, config: dict, target_date: date | None = None) -> int
             }))
 
     for eid, source, kind, score, details in found:
+        if (eid, source, kind) in kept:
+            continue
         weight = float(weights.get(source, 1.0))
         if weight != 1.0 and source != "multi":
             score = max(1, min(100, round(score * weight)))
