@@ -63,6 +63,30 @@
 
   .flow { background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
           padding: 18px 20px; box-shadow: var(--shadow); margin-bottom: 30px; }
+
+  /* pipeline-at-a-glance diagram */
+  .viz { margin: 6px 0 26px; }
+  .viz-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .viz-chip { border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px;
+              font-size: .82rem; background: var(--bg); white-space: nowrap; }
+  .viz-arrow { text-align: center; color: var(--accent); font-size: 1.1rem; padding: 6px 0; }
+  .engine-box { border: 2px solid var(--accent); border-radius: 12px; padding: 12px 14px;
+                max-width: 640px; margin: 0 auto; text-align: center;
+                background: color-mix(in srgb, var(--accent) 6%, transparent); }
+  .engine-box .ttl { font-weight: 700; margin-bottom: 8px; }
+  .engine-box .inner { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+  .engine-box .inner span { font-size: .78rem; border-radius: 7px; padding: 4px 9px;
+                            background: var(--surface); border: 1px solid var(--line); }
+  .viz-out .viz-chip { border-color: var(--accent);
+                       background: color-mix(in srgb, var(--accent) 10%, transparent); font-weight: 600; }
+
+  /* funnel */
+  .funnel { display: grid; gap: 5px; margin: 8px 0 4px; }
+  .frow { margin: 0 auto; width: var(--w); min-width: 230px; text-align: center;
+          font-size: .82rem; padding: 7px 10px; border-radius: 8px; color: var(--ink);
+          background: color-mix(in srgb, var(--accent) calc(var(--o) * 1%), transparent);
+          border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line)); }
+  .funnel-caption { text-align: center; color: var(--muted); font-size: .78rem; margin: 6px 0 0; }
   .flow h2 { font-size: 1.1rem; margin: 0 0 4px; }
   .flow > p { color: var(--muted); font-size: .85rem; margin: 0 0 14px; }
   .steps { display: grid; gap: 0; }
@@ -139,6 +163,45 @@
   <section class="card flow" aria-label="How the engine works">
     <h2>⚙️ How the engine works — end to end</h2>
     <p>The daily pipeline, from raw internet chatter to an early trend call — spotting products and consumer shifts weeks before they go mainstream. Fully automated; every step below is built and running.</p>
+
+    <div class="viz" role="img" aria-label="Pipeline: seven sources flow into the engine, which delivers a report, alerts and a dashboard">
+      <div class="viz-row">
+        <span class="viz-chip">🎵 TikTok</span>
+        <span class="viz-chip">🔎 Google searches</span>
+        <span class="viz-chip">💬 Reddit</span>
+        <span class="viz-chip">📦 Amazon</span>
+        <span class="viz-chip">📰 World news</span>
+        <span class="viz-chip">🏛️ SEC filings</span>
+        <span class="viz-chip">📚 Research houses</span>
+      </div>
+      <div class="viz-arrow">▼</div>
+      <div class="engine-box">
+        <div class="ttl">⚙️ The Engine — runs by itself every morning</div>
+        <div class="inner">
+          <span>🏷️ names the products</span>
+          <span>📊 scores them daily</span>
+          <span>🚨 spots unusual moves</span>
+          <span>🧩 groups them into trends</span>
+          <span>💼 checks market exposure</span>
+        </div>
+      </div>
+      <div class="viz-arrow">▼</div>
+      <div class="viz-row viz-out">
+        <span class="viz-chip">📲 Daily Telegram report</span>
+        <span class="viz-chip">🚨 Instant alerts</span>
+        <span class="viz-chip">🖥️ Live dashboard</span>
+      </div>
+    </div>
+
+    <div class="funnel" role="img" aria-label="Funnel: thousands of raw items narrow down to a top-5 daily report">
+      <div class="frow" style="--w:100%; --o:6">🌊 Thousands of posts, searches &amp; headlines collected daily</div>
+      <div class="frow" style="--w:78%; --o:10">🏷️ Hundreds of specific products &amp; brands identified</div>
+      <div class="frow" style="--w:56%; --o:15">🚨 A handful of statistically unusual moves</div>
+      <div class="frow" style="--w:38%; --o:22">🧩 Named trends with evidence &amp; a confidence score</div>
+      <div class="frow" style="--w:24%; --o:32">📲 Top 5 on your phone</div>
+    </div>
+    <p class="funnel-caption">Each layer filters the noise of the one above it — what reaches you survived statistics, multiple independent sources, and an AI editor.</p>
+
     <div class="steps">
       <div class="step"><div class="bubble">1</div><div>
         <h3>Collect</h3>
