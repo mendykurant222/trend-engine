@@ -65,9 +65,44 @@ def normalize(name: str) -> str:
     return re.sub(r"\s+", " ", name.strip().lower())
 
 
-def resolve_mention(conn, name: str, category: str | None) -> int:
-    """Alias -> entity_id; creates entity + alias for unknown mentions."""
+# fuzzy alias resolution thresholds (plan item 54)
+FUZZY_AUTO = 0.75      # trigram similarity above this merges automatically
+FUZZY_MIN = 0.55       # between MIN and AUTO, Haiku adjudicates
+
+MERGE_SCHEMA = {
+    "type": "object",
+    "properties": {"same": {"type": "boolean"}},
+    "required": ["same"], "additionalProperties": False,
+}
+
+# evergreen noise never worth an LLM look or an entity (plan item 62)
+EVERGREEN = {
+    "fyp", "#fyp", "foryou", "foryoupage", "viral", "trending", "funny",
+    "love", "video", "tiktok", "shorts", "memes", "asmr", "satisfying",
+    "aesthetic", "diy", "lifehack", "amazon", "walmart", "haul",
+}
+
+
+def _fuzzy_candidate(conn, alias: str):
+    return conn.execute(
+        """select e.id, a.alias, similarity(a.alias, %s) as sim
+           from entity_aliases a
+           join entities e on e.id = a.entity_id and e.status = 'active'
+           where similarity(a.alias, %s) >= %s
+           order by sim desc limit 1""",
+        (alias, alias, FUZZY_MIN),
+    ).fetchone()
+
+
+def resolve_mention(conn, name: str, category: str | None, run_id: int | None = None) -> int | None:
+    """Alias -> entity_id. Exact match first, then trigram-fuzzy (auto-merge
+    above 0.75 similarity, Haiku verdict between 0.55-0.75), else a new
+    entity. Returns None for evergreen noise."""
+    from pipeline import llm
+
     alias = normalize(name)
+    if alias in EVERGREEN or len(alias) < 3:
+        return None
     row = conn.execute(
         """select e.id from entity_aliases a
            join entities e on e.id = a.entity_id and e.status = 'active'
@@ -75,6 +110,26 @@ def resolve_mention(conn, name: str, category: str | None) -> int:
     ).fetchone()
     if row:
         return row[0]
+
+    cand = _fuzzy_candidate(conn, alias)
+    if cand:
+        eid, existing, sim = cand
+        merge, decided = sim >= FUZZY_AUTO, f"trgm:{sim:.2f}"
+        if not merge and llm.ready() is None:
+            verdict = llm.structured_call(
+                conn, run_id, "alias_merge", llm.MODEL_EXTRACTION,
+                "You decide whether two short names refer to the SAME specific "
+                "product, brand, or consumer trend. Spelling variants and "
+                "singular/plural are the same; different products are not.",
+                f"A: {alias}\nB: {existing}", MERGE_SCHEMA, max_tokens=50)
+            merge, decided = bool(verdict.get("same")), f"haiku+trgm:{sim:.2f}"
+        if merge:
+            conn.execute(
+                "insert into entity_aliases (entity_id, alias, source) values (%s, %s, %s) on conflict (alias) do nothing",
+                (eid, alias, decided))
+            log.info("fuzzy merge: %r -> %r (%s)", alias, existing, decided)
+            return eid
+
     row = conn.execute(
         """insert into entities (canonical_name, category)
            values (%s, %s)
@@ -114,6 +169,9 @@ def item_text(source: str, payload: dict) -> str | None:
         return f"{payload.get('publisher')}: {payload.get('title')}\n{(payload.get('summary') or '')[:500]}"
     if source == "tiktok" and payload.get("type") == "creative_center":
         row = payload.get("row", {})
+        tag = normalize(str(row.get("name") or "").lstrip("#"))
+        if tag in EVERGREEN:                      # plan item 62 — skip before Haiku
+            return None
         return (f"TikTok trending {row.get('type', 'hashtag')}: {row.get('name')} "
                 f"(views {row.get('videoViews')}, trend {row.get('trend')})")
     # amazon/tiktok payloads are structured (ASINs, hashtag rows) — Phase 1 TODO:
@@ -157,7 +215,9 @@ def run_extraction(conn, run_id: int | None, limit: int = 500) -> dict:
                 continue
             raw_item_id = batch[idx][0]
             for mention in item.get("mentions", []):
-                entity_id = resolve_mention(conn, mention["name"], mention.get("category"))
+                entity_id = resolve_mention(conn, mention["name"], mention.get("category"), run_id)
+                if entity_id is None:
+                    continue
                 link(conn, raw_item_id, entity_id)
                 mentions_total += 1
 

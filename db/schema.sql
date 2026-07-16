@@ -1,6 +1,9 @@
 -- Trend Engine schema (plan item 4)
 -- Idempotent: safe to re-run.
 
+-- trigram similarity for fuzzy alias resolution (plan item 54)
+create extension if not exists pg_trgm;
+
 create table if not exists entities (
     id              bigserial primary key,
     canonical_name  text not null unique,
@@ -18,6 +21,7 @@ create table if not exists entity_aliases (
     created_at  timestamptz not null default now(),
     unique (alias)
 );
+create index if not exists entity_aliases_trgm on entity_aliases using gin (alias gin_trgm_ops);
 
 -- Merge/split history so a wrong merge can be undone retroactively (plan item 4)
 create table if not exists entity_merges (

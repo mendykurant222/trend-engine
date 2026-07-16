@@ -32,6 +32,11 @@
     <label>Min strength <input name="min_strength" type="number" min="0" max="100" value="{{ args.get('min_strength','') }}" style="width:76px"></label>
     <label>Min confidence <input name="min_confidence" type="number" min="0" max="100" value="{{ args.get('min_confidence','') }}" style="width:76px"></label>
     <label>⭐ <select name="watched"><option value="">all</option><option value="1" {{ 'selected' if args.get('watched')=='1' }}>watchlist</option></select></label>
+    <label>Sort
+      <select name="sort">
+        {% for s in ['strength','newest','confidence'] %}
+          <option value="{{ s }}" {{ 'selected' if args.get('sort')==s }}>{{ s }}</option>{% endfor %}
+      </select></label>
     <button class="primary" type="submit">Filter</button>
   </form>
 </div>

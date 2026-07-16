@@ -61,16 +61,35 @@ def _structured_source_signals(conn) -> int:
     # upserting it back-fills history for the news source automatically.
     cur = conn.execute("""
         insert into daily_signals (entity_id, source, signal_date, metric, value)
-        select (ri.payload->>'entity_id')::bigint, 'gdelt',
+        select distinct on ((ri.payload->>'entity_id')::bigint, (point->>'date')::date)
+               (ri.payload->>'entity_id')::bigint, 'gdelt',
                (point->>'date')::date, 'mentions', (point->>'value')::numeric
         from raw_items ri, jsonb_array_elements(ri.payload->'timeline') point
         where ri.source = 'gdelt' and ri.payload->>'type' = 'news_volume'
           and ri.collected_at >= now() - interval '3 days'
           and exists (select 1 from entities e where e.id = (ri.payload->>'entity_id')::bigint)
+        order by (ri.payload->>'entity_id')::bigint, (point->>'date')::date, ri.collected_at desc
         on conflict (entity_id, source, signal_date, metric)
         do update set value = excluded.value
     """)
     n = cur.rowcount
+
+    # Google Trends interest timelines (plan item 53) — own source so the
+    # 0-100 interest scale never mixes with rising-query counts
+    cur = conn.execute("""
+        insert into daily_signals (entity_id, source, signal_date, metric, value)
+        select distinct on ((ri.payload->>'entity_id')::bigint, (point->>'date')::date)
+               (ri.payload->>'entity_id')::bigint, 'google_trends_interest',
+               (point->>'date')::date, 'mentions', (point->>'value')::numeric
+        from raw_items ri, jsonb_array_elements(ri.payload->'timeline') point
+        where ri.source = 'google_trends' and ri.payload->>'type' = 'interest_timeline'
+          and ri.collected_at >= now() - interval '3 days'
+          and exists (select 1 from entities e where e.id = (ri.payload->>'entity_id')::bigint)
+        order by (ri.payload->>'entity_id')::bigint, (point->>'date')::date, ri.collected_at desc
+        on conflict (entity_id, source, signal_date, metric)
+        do update set value = excluded.value
+    """)
+    n += cur.rowcount
 
     # YouTube: daily video-upload volume per entity (creator attention)
     cur = conn.execute("""

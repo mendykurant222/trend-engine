@@ -133,6 +133,11 @@ def run(config: dict) -> int:
             n_anomalies = detect_anomalies(conn, config)
             results.append(("anomaly_detector", "ok", n_anomalies, n_anomalies, None))
             extra_lines = debug_report(conn)
+            from analysis.benchmark import tiktok_benchmark_check
+            missed = tiktok_benchmark_check(conn)
+            if missed:
+                extra_lines += ["", f"📐 Benchmark: {len(missed)} of TikTok's top-10 "
+                                     f"not flagged: {', '.join(missed[:5])}"]
             from analysis.trends import run_trend_analysis
             stats, trend_lines = run_trend_analysis(conn, config, run_id)
             results.append(("trend_analysis", "ok",

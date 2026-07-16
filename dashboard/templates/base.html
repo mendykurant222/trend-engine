@@ -14,6 +14,14 @@
     :root { --bg:#0F1618; --surface:#172124; --ink:#E4EBE9; --muted:#90A3A6;
             --line:#243235; --accent:#38B79C; --warn:#D99A3D; --watch:#8D8DF0; --shadow:none; }
   }
+  /* mobile: tables collapse to cards (plan item 72) */
+  @media (max-width: 680px) {
+    table, tbody, tr, td { display: block; width: 100%; }
+    thead, th { display: none; }
+    tr { border-bottom: 1px solid var(--line); padding: 8px 0; }
+    td { border-bottom: none; padding: 3px 10px; }
+    nav { flex-wrap: wrap; }
+  }
   * { box-sizing:border-box; }
   body { margin:0; background:var(--bg); color:var(--ink);
          font:15px/1.5 -apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif; }

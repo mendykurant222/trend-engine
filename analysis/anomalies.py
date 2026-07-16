@@ -31,11 +31,16 @@ HISTORY_DAYS = 90
 
 
 def poisson_sf(k: float, lam: float) -> float:
-    """P(X >= k) for X ~ Poisson(lam)."""
+    """P(X >= k) for X ~ Poisson(lam). Normal approximation above lam=30 —
+    news/interest volumes run in the hundreds, where the exact sum is both
+    slow and inappropriate (overdispersion)."""
     if k <= 0:
         return 1.0
     if lam <= 0:
         return 0.0
+    if lam > 30:
+        z = (k - 0.5 - lam) / math.sqrt(lam)
+        return max(0.0, min(1.0, 0.5 * math.erfc(z / math.sqrt(2))))
     cdf = 0.0
     for i in range(int(k)):
         cdf += math.exp(i * math.log(lam) - lam - math.lgamma(i + 1))
@@ -163,8 +168,37 @@ def detect_anomalies(conn, config: dict, target_date: date | None = None) -> int
         (target_date - timedelta(days=xs_window), target_date, xs_bonus, target_date),
     ).fetchall()
 
-    log.info("anomalies %s: %d found, %d cross-source boosted",
-             target_date, len(found), len(boosted))
+    # ---- sequence bonus (plan item 61): leading sources firing BEFORE
+    # lagging ones is the expected shape of a real trend ----
+    seq_bonus = float(acfg.get("sequence_bonus", 1.25))
+    leading = {"tiktok", "google_trends", "google_trends_interest",
+               "youtube", "reddit", "_synthetic"}
+    lagging = {"amazon", "sec_edgar", "research", "gdelt", "_synthetic2"}
+    first_by_src: dict[int, dict[str, date]] = {}
+    for eid, src, d in conn.execute(
+        """select entity_id, source, min(signal_date) from anomalies
+           where signal_date between %s and %s and source != 'multi'
+           group by 1, 2""",
+        (target_date - timedelta(days=xs_window), target_date),
+    ).fetchall():
+        first_by_src.setdefault(eid, {})[src] = d
+    seq_entities = []
+    for eid, srcs in first_by_src.items():
+        lead = min((d for s, d in srcs.items() if s in leading), default=None)
+        lag = min((d for s, d in srcs.items() if s in lagging), default=None)
+        if lead and lag and lead < lag:
+            seq_entities.append(eid)
+    if seq_entities:
+        conn.execute(
+            """update anomalies
+               set score = least(100, round(score * %s)),
+                   details = details || '{"sequence": true}'::jsonb
+               where signal_date = %s and entity_id = any(%s)
+                 and not (details ? 'sequence')""",
+            (seq_bonus, target_date, seq_entities))
+
+    log.info("anomalies %s: %d found, %d cross-source boosted, %d sequence-boosted",
+             target_date, len(found), len(boosted), len(seq_entities))
     return len(found)
 
 

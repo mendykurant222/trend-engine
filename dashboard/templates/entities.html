@@ -13,7 +13,7 @@
 <div class="card">
   {% if entities %}
   <table>
-    <tr><th>Entity</th><th>First seen</th><th>Mentions 14d</th><th>Sources</th><th>Last 30 days</th></tr>
+    <tr><th>Entity</th><th>First seen</th><th>Mentions 14d</th><th>Sources</th><th>{{ window }} (🟠 = peak, hover for value)</th></tr>
     {% for e in entities %}
     <tr>
       <td><b>{{ e.name }}</b><br><span class="muted small">{{ e.category or '—' }}</span></td>

@@ -1,0 +1,29 @@
+# CI (plan item 63): compile check + the self-cleaning DB test suites on
+# every push. Excludes report_test (sends Telegram) and trends_test (spends
+# Sonnet tokens) — those run locally before ship.
+name: tests
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch: {}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python -m compileall -q collectors pipeline analysis reports dashboard scripts
+      - run: python -m scripts.smoke_test
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      - run: python -m scripts.anomaly_test
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}

@@ -19,6 +19,12 @@ from pipeline import db
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("DASHBOARD_SECRET") or os.environ.get("DASHBOARD_PASSWORD", "dev-secret")
+# login hardening (plan item 73)
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+    SESSION_COOKIE_SECURE=bool(os.environ.get("VERCEL")),
+)
 
 STAGE_COLORS = {"emerging": "#4A6FA5", "accelerating": "#0E7C66",
                 "peak": "#B77817", "declining": "#9AA7AB"}
@@ -51,6 +57,8 @@ def login():
         if request.form.get("password") == os.environ.get("DASHBOARD_PASSWORD"):
             session["ok"] = True
             return redirect(url_for("index"))
+        import time
+        time.sleep(1.5)            # brute-force throttle (plan item 73)
         error = "Wrong password."
     return render_template("login.html", error=error)
 
@@ -61,10 +69,12 @@ def logout():
     return redirect(url_for("login"))
 
 
-def sparkline(values: list[float], width=130, height=30, color="currentColor") -> Markup:
+def sparkline(values: list[float], width=130, height=30, color="currentColor",
+              peak_date=None) -> Markup:
     if not values or max(values) <= 0:
         return Markup("")
     top = max(values)
+    imax = values.index(top)
     n = len(values)
     pts = []
     for i, v in enumerate(values):
@@ -72,9 +82,13 @@ def sparkline(values: list[float], width=130, height=30, color="currentColor") -
         y = height - 3 - (v / top) * (height - 6)
         pts.append(f"{x:.1f},{y:.1f}")
     lx, ly = pts[-1].split(",")
+    px, py = pts[imax].split(",")
+    tip = f"peak {top:.0f}" + (f" on {peak_date}" if peak_date else "")
     return Markup(
         f'<svg width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img">'
+        f'<title>{tip}</title>'
         f'<polyline points="{" ".join(pts)}" fill="none" stroke="{color}" stroke-width="1.6"/>'
+        f'<circle cx="{px}" cy="{py}" r="2.6" fill="var(--warn)"/>'
         f'<circle cx="{lx}" cy="{ly}" r="2.4" fill="{color}"/></svg>')
 
 
@@ -179,11 +193,21 @@ def _liveness(conn):
     }
 
 
+SORT_ORDERS = {                     # plan item 71
+    "strength": "t.strength desc, t.last_updated desc",
+    "newest": "t.first_detected desc, t.strength desc",
+    "confidence": "t.confidence desc, t.strength desc",
+}
+
+
 @app.route("/")
 def index():
     conn = get_conn()
     params = _list_params() | {"status": "active"}
-    trends = conn.execute(TREND_LIST_SQL, params).fetchall()
+    sort = request.args.get("sort", "strength")
+    sql = TREND_LIST_SQL.replace("order by t.strength desc, t.last_updated desc",
+                                 "order by " + SORT_ORDERS.get(sort, SORT_ORDERS["strength"]))
+    trends = conn.execute(sql, params).fetchall()
     categories = [r[0] for r in conn.execute(
         "select distinct category from trend_clusters where category is not null order by 1").fetchall()]
     stats = conn.execute("""
@@ -224,11 +248,16 @@ def entities():
                where entity_id = any(%s) and metric = 'mentions' and signal_date >= %s
                group by 1, 2""", (ids, since)).fetchall():
             series.setdefault(eid, {})[d] = float(v)
-    out = [{"id": r[0], "name": r[1], "category": r[2], "first_seen": r[3],
-            "m14": float(r[4]), "n_sources": r[5], "sources": r[6],
-            "spark": sparkline([series.get(r[0], {}).get(d, 0) for d in days])}
-           for r in rows]
-    return render_template("entities.html", entities=out, q=q, title="Entities")
+    out = []
+    for r in rows:
+        vals = [series.get(r[0], {}).get(d, 0) for d in days]
+        peak_date = days[vals.index(max(vals))] if max(vals) > 0 else None
+        out.append({"id": r[0], "name": r[1], "category": r[2], "first_seen": r[3],
+                    "m14": float(r[4]), "n_sources": r[5], "sources": r[6],
+                    "spark": sparkline(vals, peak_date=peak_date)})
+    return render_template("entities.html", entities=out, q=q,
+                           window=f"{days[0].strftime('%d.%m')} – {days[-1].strftime('%d.%m')}",
+                           title="Entities")
 
 
 @app.route("/anomalies")

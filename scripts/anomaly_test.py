@@ -83,6 +83,12 @@ def main() -> int:
 
     try:
         entities = seed(conn)
+        # pre-existing LEADING-source anomaly 5 days ago -> today's lagging
+        # (_synthetic2) anomalies for spiking-gadget must earn the sequence bonus
+        conn.execute(
+            """insert into anomalies (entity_id, source, signal_date, kind, score, details)
+               values (%s, '_synthetic', %s, 'surge', 70, '{"today": 8, "baseline_mean": 1.5, "p": 1e-6}')""",
+            (entities["spiking-gadget"], TODAY - timedelta(days=5)))
         n = detect_anomalies(conn, config, TODAY)
         print(f"{n} anomalies found\n")
         for line in debug_report(conn, TODAY):
@@ -109,6 +115,14 @@ def main() -> int:
             failures.append("ramping-lamp acceleration NOT detected")
         if ("fresh-thing", "new_entity") not in kinds:
             failures.append("fresh-thing new_entity NOT detected")
+
+        # sequence bonus (item 61): leading fired 5d before today's lagging source
+        seq = conn.execute(
+            """select 1 from anomalies where signal_date = %s and entity_id = %s
+               and source = '_synthetic2' and details @> '{"sequence": true}' limit 1""",
+            (TODAY, entities["spiking-gadget"])).fetchone()
+        if not seq:
+            failures.append("sequence bonus NOT applied to spiking-gadget lagging anomaly")
 
     finally:
         eids = list(entities.values())
