@@ -24,17 +24,25 @@ def _parse_gdelt_date(raw: str) -> str | None:
 
 class GdeltCollector(BaseCollector):
     name = "gdelt"
-    min_interval_s = 1.5
+    min_interval_s = 3.0           # GDELT rate-limits aggressively
+    max_retries = 2
     needs_watchlist = True
     watch_entities: list[tuple[int, str]] = []
 
     def fetch(self) -> list[dict]:
+        import time as _time
         timespan = int(self.config.get("timespan_days", 90))
         max_q = int(self.config.get("max_queries", 20))
+        budget_s = int(self.config.get("fetch_budget_s", 240))
+        deadline = _time.monotonic() + budget_s
         today = date.today().isoformat()
 
         items: list[dict] = []
-        for entity_id, name in self.watch_entities[:max_q]:
+        for i, (entity_id, name) in enumerate(self.watch_entities[:max_q]):
+            if _time.monotonic() > deadline:
+                self.log.warning("fetch budget (%ds) exhausted — %d of %d entities skipped",
+                                 budget_s, min(max_q, len(self.watch_entities)) - i, max_q)
+                break
             try:
                 resp = self.request("GET", DOC_URL, params={
                     "query": f'"{name}"',

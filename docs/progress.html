@@ -148,7 +148,7 @@
 <div class="wrap">
   <header>
     <h1>📈 Trend Engine — Progress Tracker</h1>
-    <p class="sub">Updated <b>16.07.2026</b> · <b>7 sources live</b> · <b>First real trends detected</b> · Backtest: <b>93% early recall</b> · <b>Dashboard: <a href="https://trend-engine-dashboard.vercel.app">trend-engine-dashboard.vercel.app</a></b> · DB: Neon · Reports: Telegram · Month spend: <b class="mono">$0.99</b></p>
+    <p class="sub">Updated <b>16.07.2026 (noon)</b> · <b>7 sources live</b> · <b>First real trends detected</b> · Backtest: <b>93% early recall</b> · <b>Dashboard: <a href="https://trend-engine-dashboard.vercel.app">trend-engine-dashboard.vercel.app</a></b> · DB: Neon · Reports: Telegram · Month spend: <b class="mono">$0.99</b></p>
   </header>
 
   <section class="summary" aria-label="Overall summary">
@@ -423,8 +423,8 @@ const ITEMS = [
     note:"Runs daily after anomaly detection; misses are reported in the Telegram summary" },
   { n:57, p:8, t:"Dead-man's switch", d:"Telegram alert if no run is recorded for 30+ hours", s:"tested",
     note:"Independent watchdog workflow every 6h; dry-run verified. Also applies the 120-day retention prune (item 64)" },
-  { n:58, p:8, t:"Verify first scheduled cron run", d:"Actions workflow is configured; scheduling counts as proven only after the first firing", s:"ext",
-    w:"First cron fires 16.07 at 10:30 UTC" },
+  { n:58, p:8, t:"Verify first scheduled cron run", d:"Scheduling counts as proven only after the first firing", s:"tested",
+    note:"Fired on schedule 16.07 (11:58 UTC — GitHub delays cron ~90min under load, as planned for). The run exposed two real issues, both fixed same day: GDELT rate-limit overruns (now time-budgeted) and Neon dropping idle connections during slow fetches (now auto-reconnecting with keepalives)" },
   { n:59, p:8, t:"Seed-query tuning + per-category rising queries", d:"'viral product' returned news noise; original plan wanted rising queries PER CATEGORY", s:"done",
     note:"SerpApi upgraded 15.07 → 15 per-category seeds/day (was 3 generic); the noisy seed was dropped" },
   { n:60, p:8, t:"TikTok category depth", d:"Current actor returns the generic US top-100; the plan wanted category-level Creative Center data — the weakest source vs original intent", s:"todo" },

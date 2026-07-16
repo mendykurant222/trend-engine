@@ -14,14 +14,48 @@ log = logging.getLogger("db")
 SCHEMA_PATH = Path(__file__).resolve().parent.parent / "db" / "schema.sql"
 
 
-def connect() -> psycopg.Connection:
+class ResilientConnection:
+    """Auto-reconnecting wrapper: Neon's pooler drops connections that sit
+    idle while a slow collector fetches (found by the first scheduled run).
+    execute() retries once on a lost connection; everything else passes
+    through. Writes are upserts/bookkeeping, so a rare double-retry is safe.
+    """
+
+    def __init__(self, url: str):
+        self._url = url
+        self._conn = self._open()
+
+    def _open(self) -> psycopg.Connection:
+        return psycopg.connect(
+            self._url, autocommit=True,
+            keepalives=1, keepalives_idle=30,
+            keepalives_interval=10, keepalives_count=3,
+        )
+
+    def execute(self, *args, **kwargs):
+        try:
+            return self._conn.execute(*args, **kwargs)
+        except (psycopg.OperationalError, psycopg.InterfaceError) as exc:
+            log.warning("db connection lost (%s) — reconnecting", exc)
+            try:
+                self._conn.close()
+            except Exception:
+                pass
+            self._conn = self._open()
+            return self._conn.execute(*args, **kwargs)
+
+    def __getattr__(self, name):
+        return getattr(self._conn, name)
+
+
+def connect() -> "ResilientConnection":
     url = os.environ.get("DATABASE_URL")
     if not url:
         raise RuntimeError(
-            "DATABASE_URL is not set. Create a Supabase project and put its "
-            "connection string in .env (see .env.example)."
+            "DATABASE_URL is not set. Put the Neon connection string in .env "
+            "(see .env.example)."
         )
-    return psycopg.connect(url, autocommit=True)
+    return ResilientConnection(url)
 
 
 def apply_schema(conn: psycopg.Connection) -> None:
