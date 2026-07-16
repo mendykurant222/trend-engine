@@ -24,6 +24,7 @@ from collectors.reddit import RedditCollector
 from collectors.research import ResearchCollector
 from collectors.sec_edgar import SecEdgarCollector
 from collectors.tiktok import TikTokCollector
+from collectors.youtube import YouTubeCollector
 from pipeline import db
 from reports.run_summary import send_summary
 
@@ -39,6 +40,7 @@ COLLECTORS: list[type[BaseCollector]] = [
     SecEdgarCollector,
     GdeltCollector,
     ResearchCollector,
+    YouTubeCollector,
 ]
 
 

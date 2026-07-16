@@ -99,6 +99,11 @@ sources:
     timespan_days: 90             # one call returns the full daily timeline
     max_queries: 40               # widened 15.07 (breadth, item 75)
 
+  youtube:
+    enabled: true                 # plan item 38 — free, 10k quota units/day
+    lookback_days: 14
+    max_queries: 30               # 30 × 100 units = 3,000/day, safe margin
+
   research:
     enabled: true                 # plan item 36 — free RSS; Gartner blocks bots, skipped
     lookback_days: 14

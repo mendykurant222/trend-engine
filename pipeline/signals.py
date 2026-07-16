@@ -72,6 +72,22 @@ def _structured_source_signals(conn) -> int:
     """)
     n = cur.rowcount
 
+    # YouTube: daily video-upload volume per entity (creator attention)
+    cur = conn.execute("""
+        insert into daily_signals (entity_id, source, signal_date, metric, value)
+        select (ri.payload->>'entity_id')::bigint, 'youtube',
+               (video->>'publishedAt')::date, 'mentions', count(*)
+        from raw_items ri, jsonb_array_elements(ri.payload->'videos') video
+        where ri.source = 'youtube' and ri.payload->>'type' = 'video_volume'
+          and ri.collected_at >= now() - interval '3 days'
+          and video->>'publishedAt' != ''
+          and exists (select 1 from entities e where e.id = (ri.payload->>'entity_id')::bigint)
+        group by 1, 2, 3
+        on conflict (entity_id, source, signal_date, metric)
+        do update set value = excluded.value
+    """)
+    n += cur.rowcount
+
     cur = conn.execute("""
         insert into daily_signals (entity_id, source, signal_date, metric, value)
         select (ri.payload->>'entity_id')::bigint, 'sec_edgar',

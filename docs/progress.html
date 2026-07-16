@@ -148,7 +148,7 @@
 <div class="wrap">
   <header>
     <h1>📈 Trend Engine — Progress Tracker</h1>
-    <p class="sub">Updated <b>15.07.2026 (night)</b> · <b>6 sources live</b> (Amazon joined) · <b>Dashboard: <a href="https://trend-engine-dashboard.vercel.app">trend-engine-dashboard.vercel.app</a></b> · DB: Neon · Reports: Telegram · Month spend: <b class="mono">$0.60</b></p>
+    <p class="sub">Updated <b>15.07.2026 (night)</b> · <b>7 sources live</b> (Amazon + YouTube joined) · <b>Dashboard: <a href="https://trend-engine-dashboard.vercel.app">trend-engine-dashboard.vercel.app</a></b> · DB: Neon · Reports: Telegram · Month spend: <b class="mono">$0.60</b></p>
   </header>
 
   <section class="summary" aria-label="Overall summary">
@@ -180,7 +180,7 @@
       <tr><td style="padding:6px 10px;"><b>Telegram</b></td><td style="padding:6px 10px;">Daily reports + instant alerts</td><td style="padding:6px 10px;" class="mono">$0</td><td style="padding:6px 10px;">🟢 live</td></tr>
       <tr><td style="padding:6px 10px;"><b>GDELT · SEC EDGAR · RSS</b></td><td style="padding:6px 10px;">News volume, filings, research houses</td><td style="padding:6px 10px;" class="mono">$0</td><td style="padding:6px 10px;">🟢 live</td></tr>
       <tr><td style="padding:6px 10px;"><b>Reddit API</b></td><td style="padding:6px 10px;">Community chatter (core source)</td><td style="padding:6px 10px;" class="mono">$0</td><td style="padding:6px 10px;">🕓 waiting for Reddit's approval</td></tr>
-      <tr><td style="padding:6px 10px;"><b>YouTube Data API</b></td><td style="padding:6px 10px;">View volumes by topic</td><td style="padding:6px 10px;" class="mono">$0</td><td style="padding:6px 10px;">🕓 key pending (Mendy)</td></tr>
+      <tr><td style="padding:6px 10px;"><b>YouTube Data API</b></td><td style="padding:6px 10px;">Creator attention — video volume by topic</td><td style="padding:6px 10px;" class="mono">$0</td><td style="padding:6px 10px;">🟢 live — 15.07</td></tr>
       <tr><td style="padding:6px 10px;"><b>API Ninjas</b></td><td style="padding:6px 10px;">Earnings-call transcripts</td><td style="padding:6px 10px;" class="mono">$39 if premium</td><td style="padding:6px 10px;">🟡 key wired — transcripts need premium (decision)</td></tr>
       <tr><td style="padding:6px 10px;"><b>Resend</b></td><td style="padding:6px 10px;">Email copies of reports</td><td style="padding:6px 10px;" class="mono">$0</td><td style="padding:6px 10px;">⚪ optional, not set up</td></tr>
       <tr style="font-weight:700;"><td style="padding:8px 10px; border-top:1px solid var(--line);">Total fixed</td><td style="padding:8px 10px; border-top:1px solid var(--line);"></td><td style="padding:8px 10px; border-top:1px solid var(--line);" class="mono">~$135–150</td><td style="padding:8px 10px; border-top:1px solid var(--line);">of the $300/mo budget</td></tr>
@@ -380,7 +380,8 @@ const ITEMS = [
     note:"LIVE via RSS (ARK, CB Insights, McKinsey; Gartner blocks bots). 29 posts on first run — flows through the same entity extraction as everything else" },
   { n:37, p:5, t:"News", d:"NewsAPI or GDELT (free)", s:"tested",
     note:"LIVE via GDELT volume timelines — one call per entity returns ~90 days of daily article counts (feeds anomalies + cross-source like any source)" },
-  { n:38, p:5, t:"YouTube Data API", d:"View volumes by topic", s:"todo", w:"Google API key (free) — when we get there" },
+  { n:38, p:5, t:"YouTube Data API", d:"Creator attention by topic — daily video-upload volume per watched entity", s:"tested",
+    note:"LIVE 15.07 — tested: 50 labubu videos/14d -> daily volume signals. Free (3,000 of 10,000 quota units/day). Creators chase trends before audiences do" },
   { n:39, p:5, t:"Instagram via third party", d:"Budget-dependent — not critical", s:"todo" },
   { n:40, p:5, t:"Per-source reliability weight", d:"In the overall score", s:"tested",
     note:"config anomalies.source_weights — SEC filings 1.2, Amazon 1.1, news 0.7; multiplies anomaly scores" },
