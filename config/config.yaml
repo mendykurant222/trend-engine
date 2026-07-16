@@ -46,17 +46,35 @@ sources:
     provider: serpapi             # paid API is the PRIMARY path — pytrends dropped (plan item 12)
     anchor_query: "weather"       # fixed anchor for cross-day normalization
     cost_per_search_usd: 0.01
-    # free tier = 100 searches/month -> 3 seeds/day = 90. Expand list after upgrade.
+    # Developer tier (5,000/mo) since 15.07 — per-category seeds, ~15/day (item 59/75)
     seed_queries:
-      - "viral product"
       - "tiktok made me buy it"
+      - "amazon finds"
       - "trending gadget"
+      - "kitchen gadget"
+      - "home decor trend"
+      - "skincare trend"
+      - "makeup dupe"
+      - "viral snack"
+      - "new energy drink"
+      - "trending toy"
+      - "viral water bottle"
+      - "workout trend"
+      - "supplement trend"
+      - "trending sneakers"
+      - "pet gadget"
 
   amazon:
-    enabled: false                # enable once KEEPA_KEY is set
+    enabled: true
     provider: keepa
     domain: 1                     # 1 = amazon.com
-    categories: []                # Keepa category node ids; fill in Phase 1
+    categories:                   # Amazon US browse-node ids
+      - 1055398                   # Home & Kitchen
+      - 165793011                 # Toys & Games
+      - 3760911                   # Beauty & Personal Care
+      - 3375251                   # Sports & Outdoors
+      - 16310101                  # Grocery & Gourmet Food
+      - 3760901                   # Health & Household
     cost_per_token_usd: 0.0005
 
   tiktok:
