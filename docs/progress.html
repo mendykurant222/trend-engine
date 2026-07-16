@@ -148,7 +148,7 @@
 <div class="wrap">
   <header>
     <h1>📈 Trend Engine — Progress Tracker</h1>
-    <p class="sub">Updated <b>15.07.2026 (night)</b> · <b>5 sources live</b> · <b>Dashboard: <a href="https://trend-engine-dashboard.vercel.app">trend-engine-dashboard.vercel.app</a></b> · DB: Neon · Reports: Telegram · Month spend: <b class="mono">$0.44</b></p>
+    <p class="sub">Updated <b>15.07.2026 (night)</b> · <b>6 sources live</b> (Amazon joined) · <b>Dashboard: <a href="https://trend-engine-dashboard.vercel.app">trend-engine-dashboard.vercel.app</a></b> · DB: Neon · Reports: Telegram · Month spend: <b class="mono">$0.60</b></p>
   </header>
 
   <section class="summary" aria-label="Overall summary">
@@ -158,6 +158,34 @@
     </div>
     <div class="bar" id="bar" role="img" aria-label="Status distribution"></div>
     <div class="chips" id="chips" role="group" aria-label="Filter by status"></div>
+  </section>
+
+  <section class="summary" aria-label="Platforms and costs">
+    <h2 style="font-size:1.05rem; margin:0 0 10px;">💳 Platforms we use &amp; what they cost</h2>
+    <div style="overflow-x:auto;">
+    <table style="border-collapse:collapse; width:100%; font-size:.85rem;">
+      <tr style="color:var(--muted); text-align:left; font-size:.75rem; text-transform:uppercase; letter-spacing:.04em;">
+        <th style="padding:5px 10px; border-bottom:1px solid var(--line);">Platform</th>
+        <th style="padding:5px 10px; border-bottom:1px solid var(--line);">What it does</th>
+        <th style="padding:5px 10px; border-bottom:1px solid var(--line);">Cost / month</th>
+        <th style="padding:5px 10px; border-bottom:1px solid var(--line);">Status</th>
+      </tr>
+      <tr><td style="padding:6px 10px;"><b>SerpApi</b></td><td style="padding:6px 10px;">Google Trends rising searches</td><td style="padding:6px 10px;" class="mono">$75</td><td style="padding:6px 10px;">🟢 live — Developer tier since 15.07</td></tr>
+      <tr><td style="padding:6px 10px;"><b>Keepa</b></td><td style="padding:6px 10px;">Amazon best-sellers &amp; price history</td><td style="padding:6px 10px;" class="mono">€49 (~$53)</td><td style="padding:6px 10px;">🟢 live — 15.07</td></tr>
+      <tr><td style="padding:6px 10px;"><b>Anthropic API</b></td><td style="padding:6px 10px;">Claude — reads posts, names products, builds trends</td><td style="padding:6px 10px;" class="mono">~$5–20 usage</td><td style="padding:6px 10px;">🟢 live — every call cost-logged</td></tr>
+      <tr><td style="padding:6px 10px;"><b>Apify</b></td><td style="padding:6px 10px;">TikTok trends scraping</td><td style="padding:6px 10px;" class="mono">~$3 (free $5 credit)</td><td style="padding:6px 10px;">🟢 live</td></tr>
+      <tr><td style="padding:6px 10px;"><b>Neon</b></td><td style="padding:6px 10px;">PostgreSQL database</td><td style="padding:6px 10px;" class="mono">$0 (free tier)</td><td style="padding:6px 10px;">🟢 live — upgrade when data grows</td></tr>
+      <tr><td style="padding:6px 10px;"><b>GitHub + Actions</b></td><td style="padding:6px 10px;">Code + the daily automated run</td><td style="padding:6px 10px;" class="mono">$0</td><td style="padding:6px 10px;">🟢 live</td></tr>
+      <tr><td style="padding:6px 10px;"><b>Vercel</b></td><td style="padding:6px 10px;">Dashboard hosting</td><td style="padding:6px 10px;" class="mono">$0 (hobby)</td><td style="padding:6px 10px;">🟢 live</td></tr>
+      <tr><td style="padding:6px 10px;"><b>Telegram</b></td><td style="padding:6px 10px;">Daily reports + instant alerts</td><td style="padding:6px 10px;" class="mono">$0</td><td style="padding:6px 10px;">🟢 live</td></tr>
+      <tr><td style="padding:6px 10px;"><b>GDELT · SEC EDGAR · RSS</b></td><td style="padding:6px 10px;">News volume, filings, research houses</td><td style="padding:6px 10px;" class="mono">$0</td><td style="padding:6px 10px;">🟢 live</td></tr>
+      <tr><td style="padding:6px 10px;"><b>Reddit API</b></td><td style="padding:6px 10px;">Community chatter (core source)</td><td style="padding:6px 10px;" class="mono">$0</td><td style="padding:6px 10px;">🕓 waiting for Reddit's approval</td></tr>
+      <tr><td style="padding:6px 10px;"><b>YouTube Data API</b></td><td style="padding:6px 10px;">View volumes by topic</td><td style="padding:6px 10px;" class="mono">$0</td><td style="padding:6px 10px;">🕓 key pending (Mendy)</td></tr>
+      <tr><td style="padding:6px 10px;"><b>API Ninjas</b></td><td style="padding:6px 10px;">Earnings-call transcripts</td><td style="padding:6px 10px;" class="mono">$39 if premium</td><td style="padding:6px 10px;">🟡 key wired — transcripts need premium (decision)</td></tr>
+      <tr><td style="padding:6px 10px;"><b>Resend</b></td><td style="padding:6px 10px;">Email copies of reports</td><td style="padding:6px 10px;" class="mono">$0</td><td style="padding:6px 10px;">⚪ optional, not set up</td></tr>
+      <tr style="font-weight:700;"><td style="padding:8px 10px; border-top:1px solid var(--line);">Total fixed</td><td style="padding:8px 10px; border-top:1px solid var(--line);"></td><td style="padding:8px 10px; border-top:1px solid var(--line);" class="mono">~$135–150</td><td style="padding:8px 10px; border-top:1px solid var(--line);">of the $300/mo budget</td></tr>
+    </table>
+    </div>
   </section>
 
   <section class="card flow" aria-label="How the engine works">
@@ -250,7 +278,7 @@
   <main id="phases"></main>
 
   <footer>
-    Based on the agreed plan — 51 original items, extended to 76 after two review rounds on 15.07
+    Based on the agreed plan — 51 original items, extended to 77 after two review rounds on 15.07
     (product phase removed — personal use only).
     "Tested" = code plus a passing automated test or live verification. Updated every working session.
   </footer>
@@ -298,15 +326,15 @@ const ITEMS = [
   { n:10, p:0, t:"Historical backfill", d:"Google Trends / Keepa / Reddit backwards — real baselines from day one", s:"partial",
     w:"Keepa + Reddit approval for the remaining sources",
     note:"News source back-fills itself: every GDELT call returns a 90-day daily timeline, so watched entities get instant baselines" },
-  { n:11, p:0, t:"API vendors + total budget", d:"$300/month for the whole system, tracked in api_costs", s:"partial",
-    w:"Keepa account only (~€49/mo, can defer)", note:"SerpApi + Apify live; spend $0.17 of the $300 cap" },
+  { n:11, p:0, t:"API vendors + total budget", d:"$300/month for the whole system, tracked in api_costs", s:"done",
+    note:"All core vendors live 15.07: SerpApi (Developer), Keepa, Apify, Anthropic — fixed ~$135/mo of the $300 cap; see the platforms table above" },
 
   { n:12, p:1, t:"Google Trends via paid API", d:"SerpApi as the primary path (pytrends is dead) + anchor-query normalization", s:"tested",
     note:"LIVE — real rising queries (\"tiktok made me buy it products\" +550%); 3 seeds/day fits the free tier (100/month)" },
   { n:13, p:1, t:"Reddit API", d:"18 starter subreddits (target 100–200 by category)", s:"ext",
     w:"Reddit's review of the app request; after approval the repo goes private", note:"Collector fully coded and ready" },
-  { n:14, p:1, t:"Amazon — Movers & Shakers + Best Sellers", d:"Via Keepa, no self-scraping", s:"key",
-    w:"KEEPA_KEY — ~€49/month (can defer)", note:"Collector fully coded and ready" },
+  { n:14, p:1, t:"Amazon — Movers & Shakers + Best Sellers", d:"Via Keepa, no self-scraping", s:"tested",
+    note:"LIVE 15.07 — 6 categories × 200 best-sellers daily, live-tested. Next: ASIN→title resolution (item 77) so extraction can read them; Movers & Shakers after" },
   { n:15, p:1, t:"TikTok Creative Center", d:"Via Apify; doubles as a calibration benchmark", s:"tested",
     note:"LIVE — actor selected (automation-lab/tiktok-trends-scraper); 20 ranked hashtags on the first run; ~$0.10/run" },
   { n:16, p:1, t:"Entity extraction with Claude Haiku", d:"Batched + alias merging + reversible merge history", s:"tested",
@@ -390,8 +418,8 @@ const ITEMS = [
   { n:57, p:8, t:"Dead-man's switch", d:"Telegram alert if no run is recorded for 30+ hours — catches the whole pipeline silently stopping", s:"todo" },
   { n:58, p:8, t:"Verify first scheduled cron run", d:"Actions workflow is configured; scheduling counts as proven only after the first firing", s:"ext",
     w:"First cron fires 16.07 at 10:30 UTC" },
-  { n:59, p:8, t:"Seed-query tuning + per-category rising queries", d:"'viral product' returns news noise; original plan wanted rising queries PER CATEGORY", s:"todo",
-    w:"Seed swap doable now; per-category coverage needs the paid SerpApi tier (Mendy's call)" },
+  { n:59, p:8, t:"Seed-query tuning + per-category rising queries", d:"'viral product' returned news noise; original plan wanted rising queries PER CATEGORY", s:"done",
+    note:"SerpApi upgraded 15.07 → 15 per-category seeds/day (was 3 generic); the noisy seed was dropped" },
   { n:60, p:8, t:"TikTok category depth", d:"Current actor returns the generic US top-100; the plan wanted category-level Creative Center data — the weakest source vs original intent", s:"todo" },
   { n:61, p:8, t:"Cross-source sequence bonus", d:"Extra score when sources fire in the expected order (tiktok → reddit/news → amazon) — leftover from audit #7", s:"todo" },
   { n:62, p:8, t:"Extraction pre-filter", d:"Skip evergreen hashtags/queries (#fyp, #viral…) before they reach Haiku — cost control ahead of Reddit scale", s:"todo" },
@@ -413,11 +441,12 @@ const ITEMS = [
     w:"Mendy rotates the key; I update trend-engine .env + GitHub secret in the same step" },
 
   // ---- added 15.07 (night) from the external plan review ----
-  { n:75, p:8, t:"Breadth expansion program", d:"The vision was 'everything, including a pool lamp' — the funnel today is ~40 queries/day: 3 Trends seeds, 18 subreddits, 20 TikTok hashtags, 20-entity watchlists. Target: ~15 per-category seeds, 100-200 subreddits, per-category TikTok runs, 100-entity watchlists (~$100-150/mo, well inside the $300 budget)", s:"key",
-    w:"Two decisions: SerpApi paid tier ($75/mo) and extra Apify runs (~$25/mo); Reddit part unblocks with approval",
-    note:"Named explicitly per the external review: with today's funnel the engine catches big trends late, not small trends early" },
+  { n:75, p:8, t:"Breadth expansion program", d:"The vision was 'everything, including a pool lamp' — widening the funnel from ~40 queries/day toward full category coverage", s:"partial",
+    w:"Remaining: per-category TikTok runs (~$25/mo Apify) + Reddit approval",
+    note:"15.07 progress: Trends seeds 3→15/day, Amazon 0→6 categories, EDGAR/GDELT watchlists 20→40 entities. TikTok and Reddit are the last narrow spots" },
   { n:76, p:8, t:"Earnings-call transcripts source", d:"The Wall Street color layer the plan actually asked for — 'we're seeing incredible demand for X' — via a dedicated transcripts API (API Ninjas / FMP), Claude extracting product mentions + sentiment", s:"key",
-    w:"Pick a provider (~$0-30/mo) — needed only if the Wall-Street layer matters to you" },
+    w:"API Ninjas key is wired, but the transcripts endpoint turned out premium-only ($39/mo) — approve it, or we skip the Wall-Street layer for now" },
+  { n:77, p:8, t:"Amazon ASIN→title resolution", d:"Best-seller lists arrive as ASIN codes; resolving top movers to product titles (Keepa product API) lets entity extraction actually read the Amazon source", s:"todo" },
 ];
 
 let filter = null;

@@ -92,12 +92,12 @@ sources:
     enabled: true                 # free official API, no key (plan item 35)
     forms: ["8-K", "10-K", "10-Q"]
     lookback_days: 30
-    max_queries: 20               # entity searches per run
+    max_queries: 40               # widened 15.07 (breadth, item 75)
 
   gdelt:
     enabled: true                 # free news volume, no key (plan item 37)
     timespan_days: 90             # one call returns the full daily timeline
-    max_queries: 20
+    max_queries: 40               # widened 15.07 (breadth, item 75)
 
   research:
     enabled: true                 # plan item 36 — free RSS; Gartner blocks bots, skipped
