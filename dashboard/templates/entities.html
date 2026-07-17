@@ -1,6 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>🏷️ Entities</h1>
+<div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+  <h1>🏷️ Entities</h1>
+  <a href="{{ url_for('entities', early=1) }}"><button class="primary" type="button"
+    style="{{ 'opacity:.65' if args.get('early') != '1' else '' }}">🌱 Early radar</button></a>
+  {% if args.get('early') == '1' %}<span class="muted small">showing: small (&le;150 mentions) · 2+ sources · not past peak · sorted by biggest change — the "next pool lamp" view</span>{% endif %}
+</div>
 <p class="muted">Every product, brand, and micro-trend the engine is tracking — the raw material trends are made of.</p>
 
 <details class="card" style="font-size:.88rem;">
@@ -10,6 +15,7 @@
     <li><b>Δ week</b> — the direction you asked about: this week's volume vs the week before. ▲ rising (+25% or more), ▼ falling (−25% or less), ≈ flat, 🆕 new (first seen within 7 days — no prior week to compare).</li>
     <li><b>Sources</b> — how many independent platforms mention it. 1 source = chatter; 3+ sources = something real is moving (hover to see which).</li>
     <li><b>Sparkline</b> — the 30-day shape. 🟠 marks the peak day (hover for the value); the last dot is today. A right-rising line + multiple sources = a trend candidate before it becomes an official trend.</li>
+    <li><b>Phase</b> — where the story is: 🌱 climbing (peak is today/yesterday — still building), steady, 🏔 past peak (the peak was a week+ ago — the story is already told). The <b>🌱 Early radar</b> button combines this with "small + multi-source" to show pre-peak candidates only.</li>
   </ul>
 </details>
 
@@ -32,6 +38,12 @@
         {% for d, lbl in [('rising','▲ rising'),('falling','▼ falling'),('flat','≈ flat'),('new','🆕 new')] %}
           <option value="{{ d }}" {{ 'selected' if args.get('direction')==d }}>{{ lbl }}</option>{% endfor %}
       </select></label>
+    <label>Phase
+      <select name="phase" onchange="f.submit()">
+        <option value="">all</option>
+        {% for ph, lbl in [('climbing','🌱 climbing'),('steady','steady'),('past-peak','🏔 past peak'),('quiet','quiet')] %}
+          <option value="{{ ph }}" {{ 'selected' if args.get('phase')==ph }}>{{ lbl }}</option>{% endfor %}
+      </select></label>
     <label>Min mentions 14d <input name="min_mentions" type="number" min="0" value="{{ args.get('min_mentions','') }}" style="width:80px" onchange="f.submit()"></label>
     <label>Sort
       <select name="sort" onchange="f.submit()">
@@ -50,7 +62,10 @@
     <tr><th>Entity</th><th>First seen</th><th>Mentions 14d</th><th>Δ week</th><th>Sources</th><th>{{ window }} (🟠 = peak)</th></tr>
     {% for e in entities %}
     <tr>
-      <td><b>{{ e.name }}</b><br><span class="muted small">{{ e.category or '—' }}</span></td>
+      <td><b>{{ e.name }}</b>
+        {% if e.phase == 'climbing' %}<span class="chip" style="--sc:#0E7C66">🌱 climbing</span>
+        {% elif e.phase == 'past-peak' %}<span class="chip" style="--sc:#9AA7AB">🏔 past peak</span>{% endif %}
+        <br><span class="muted small">{{ e.category or '—' }}</span></td>
       <td class="mono small">{{ e.first_seen }}</td>
       <td class="mono">{{ '%.0f' % e.m14 }}</td>
       <td class="mono">

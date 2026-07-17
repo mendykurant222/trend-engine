@@ -281,6 +281,9 @@ anomalies:
     sec_edgar: 1.2                # corporate filings = highest-conviction mentions
     gdelt: 0.7                    # news volume is broad and noisy
     research: 1.1
+    tiktok_curve: 1.0
+    google_trends_interest: 0.9
+    youtube: 1.0
   acceleration_ratio: 2.0         # velocity must double week-over-week
   cross_source_window_days: 14    # plan item 21 — sources lag each other; not simultaneity
   cross_source_bonus: 2.0

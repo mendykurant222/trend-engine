@@ -129,7 +129,14 @@ def watch_entities(conn, limit: int = 20) -> list[tuple[int, str]]:
                      where tce.entity_id = e.id)
              or exists (select 1 from anomalies a
                         where a.entity_id = e.id and a.signal_date >= current_date - 14)
-             or e.first_seen >= current_date - 7)
+             or e.first_seen >= current_date - 7
+             -- Breakout searches are pre-peak by definition — auto-watch them
+             or exists (select 1 from raw_item_entities rie
+                        join raw_items ri on ri.id = rie.raw_item_id
+                        where rie.entity_id = e.id and ri.source = 'google_trends'
+                          and ri.payload->>'type' = 'rising_query'
+                          and ri.payload->>'value' = 'Breakout'
+                          and ri.item_date >= current_date - 7))
            order by e.id desc limit %s""", (limit,),
     ).fetchall()
     return [(r[0], r[1]) for r in rows]

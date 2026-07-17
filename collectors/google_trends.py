@@ -33,17 +33,24 @@ class GoogleTrendsCollector(BaseCollector):
         items: list[dict] = []
         anchor = self.config.get("anchor_query", "weather")
 
-        # 1) Rising related queries for each category seed — discovery of new entities
+        # 1) Rising related queries — ONE raw item per query, so entities link
+        #    precisely to the query that surfaced them and "Breakout" (+5000%,
+        #    pre-peak by definition) can boost them downstream
+        today = date.today().isoformat()
         for seed in self.config.get("seed_queries", []):
             data = self._search({"q": seed, "data_type": "RELATED_QUERIES"})
             rising = (data.get("related_queries") or {}).get("rising", [])
-            if rising:
-                today = date.today().isoformat()
+            for r in rising:
+                query = (r.get("query") or "").strip()
+                if not query:
+                    continue
                 items.append({
-                    "external_id": f"rising:{seed}:{today}",
-                    "item_date": today,   # "rising as of today" — lets signals count it
-                    "payload": {"type": "rising_queries", "seed": seed, "rising": rising},
+                    "external_id": f"rq:{seed}:{query}:{today}",
+                    "item_date": today,
+                    "payload": {"type": "rising_query", "seed": seed,
+                                "query": query, "value": str(r.get("value", ""))},
                 })
+            self.log.info("seed %r: %d rising queries", seed, len(rising))
 
         # 2) Interest-over-time for watched entities (plan item 53). One call
         #    returns ~90 days of self-consistent daily values — like GDELT,

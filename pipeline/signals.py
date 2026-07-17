@@ -91,6 +91,24 @@ def _structured_source_signals(conn) -> int:
     """)
     n += cur.rowcount
 
+    # TikTok popularity curves: ~7 daily points per hashtag (0-100 relative) —
+    # entity linkage via extraction; gives TikTok real per-day history
+    cur = conn.execute("""
+        insert into daily_signals (entity_id, source, signal_date, metric, value)
+        select distinct on (rie.entity_id, (point->>'date')::date)
+               rie.entity_id, 'tiktok_curve',
+               (point->>'date')::date, 'mentions', (point->>'value')::numeric
+        from raw_items ri
+        join raw_item_entities rie on rie.raw_item_id = ri.id,
+             jsonb_array_elements(ri.payload->'curve') point
+        where ri.source = 'tiktok' and jsonb_array_length(coalesce(ri.payload->'curve', '[]'::jsonb)) > 0
+          and ri.collected_at >= now() - interval '3 days'
+        order by rie.entity_id, (point->>'date')::date, ri.collected_at desc
+        on conflict (entity_id, source, signal_date, metric)
+        do update set value = excluded.value
+    """)
+    n += cur.rowcount
+
     # YouTube: daily video-upload volume per entity (creator attention)
     cur = conn.execute("""
         insert into daily_signals (entity_id, source, signal_date, metric, value)

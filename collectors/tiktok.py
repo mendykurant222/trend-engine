@@ -10,7 +10,7 @@ detector (analysis/benchmark.py).
 """
 
 import os
-from datetime import date
+from datetime import date, datetime, timezone
 
 from .base import BaseCollector, CollectorError
 
@@ -68,10 +68,20 @@ class TikTokCollector(BaseCollector):
             data = resp.json()
             rows = (data[0].get("items") or []) if isinstance(data, list) and data else []
             for i, h in enumerate(rows):
+                # popularityCurve: ~7 daily {timestamp, value 0-100} points —
+                # per-hashtag history for climbing-vs-peaked detection
+                curve = []
+                for p in h.get("popularityCurve") or []:
+                    try:
+                        d = datetime.fromtimestamp(int(p["timestamp"]), tz=timezone.utc)
+                        curve.append({"date": d.date().isoformat(),
+                                      "value": float(p.get("value") or 0)})
+                    except (KeyError, TypeError, ValueError):
+                        continue
                 items.append({
                     "external_id": f"hashtag:{ind['label']}:{h.get('hashtagName')}:{today}",
                     "item_date": today,
-                    "payload": {"type": "creative_center", "row": {
+                    "payload": {"type": "creative_center", "curve": curve, "row": {
                         "type": "hashtag",
                         "name": h.get("hashtagName"),
                         "rank": h.get("rankIndex") or i + 1,

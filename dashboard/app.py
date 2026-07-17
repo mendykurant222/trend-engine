@@ -233,8 +233,15 @@ def entities():
     f_category = request.args.get("category", "")
     f_source = request.args.get("source", "")
     f_direction = request.args.get("direction", "")
+    f_phase = request.args.get("phase", "")
     f_min = float(request.args.get("min_mentions") or 0)
+    f_max = float(request.args.get("max_mentions") or 0)
+    min_sources = int(request.args.get("min_sources") or 0)
     sort = request.args.get("sort", "mentions")
+    early = request.args.get("early") == "1"
+    if early:
+        # 🌱 Early radar preset: small but multi-source and not past its peak
+        f_max, min_sources, sort = f_max or 150, max(min_sources, 2), "change"
     if sort not in ENTITY_SORTS:
         sort = "mentions"
 
@@ -281,13 +288,26 @@ def entities():
             continue
         if f_source and f_source not in (sources or "").split(","):
             continue
-        if m14 < f_min:
+        if m14 < f_min or (f_max and m14 > f_max) or n_sources < min_sources:
             continue
         vals = [series.get(eid, {}).get(d, 0) for d in days]
         peak_date = days[vals.index(max(vals))] if max(vals) > 0 else None
+        # phase: is the story still building or already told?
+        if peak_date is None:
+            phase = "quiet"
+        elif (today - peak_date).days <= 2:
+            phase = "climbing"
+        elif (today - peak_date).days >= 7:
+            phase = "past-peak"
+        else:
+            phase = "steady"
+        if f_phase and phase != f_phase:
+            continue
+        if early and phase == "past-peak":
+            continue
         out.append({"id": eid, "name": name, "category": category, "first_seen": first_seen,
                     "m14": m14, "last7": last7, "prev7": prev7,
-                    "delta_pct": delta_pct, "direction": direction,
+                    "delta_pct": delta_pct, "direction": direction, "phase": phase,
                     "n_sources": n_sources, "sources": sources,
                     "spark": sparkline(vals, peak_date=peak_date)})
 

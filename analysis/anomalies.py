@@ -168,9 +168,21 @@ def detect_anomalies(conn, config: dict, target_date: date | None = None) -> int
                 "first_seen": str(seen),
             }))
 
+    # entities surfaced by a Google "Breakout" query in the last 7 days are
+    # pre-peak by definition — boost their anomalies (pre-peak bias package)
+    breakout: set[int] = {r[0] for r in conn.execute(
+        """select distinct rie.entity_id from raw_item_entities rie
+           join raw_items ri on ri.id = rie.raw_item_id
+           where ri.source = 'google_trends' and ri.payload->>'type' = 'rising_query'
+             and ri.payload->>'value' = 'Breakout' and ri.item_date >= %s""",
+        (target_date - timedelta(days=7),)).fetchall()}
+
     for eid, source, kind, score, details in found:
         if (eid, source, kind) in kept:
             continue
+        if eid in breakout:
+            score = min(100, round(score * 1.3))
+            details = {**details, "breakout": True}
         weight = float(weights.get(source, 1.0))
         if weight != 1.0 and source != "multi":
             score = max(1, min(100, round(score * weight)))
@@ -200,7 +212,7 @@ def detect_anomalies(conn, config: dict, target_date: date | None = None) -> int
     # ---- sequence bonus (plan item 61): leading sources firing BEFORE
     # lagging ones is the expected shape of a real trend ----
     seq_bonus = float(acfg.get("sequence_bonus", 1.25))
-    leading = {"tiktok", "google_trends", "google_trends_interest",
+    leading = {"tiktok", "tiktok_curve", "google_trends", "google_trends_interest",
                "youtube", "reddit", "_synthetic"}
     lagging = {"amazon", "sec_edgar", "research", "gdelt", "_synthetic2"}
     first_by_src: dict[int, dict[str, date]] = {}

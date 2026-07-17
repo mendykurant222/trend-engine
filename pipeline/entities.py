@@ -161,7 +161,9 @@ def item_text(source: str, payload: dict) -> str | None:
         title = payload.get("title") or ""
         body = (payload.get("selftext") or "")[:500]
         return f"{title}\n{body}".strip() or None
-    if source == "google_trends" and payload.get("type") == "rising_queries":
+    if source == "google_trends" and payload.get("type") == "rising_query":
+        return f"Rising Google search: {payload.get('query')} ({payload.get('value')})"
+    if source == "google_trends" and payload.get("type") == "rising_queries":  # legacy items
         queries = [r.get("query", "") for r in payload.get("rising", [])]
         return "Rising search queries: " + ", ".join(q for q in queries if q)
     if source == "amazon" and payload.get("type") == "bestseller_titles":
