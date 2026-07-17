@@ -278,7 +278,7 @@
   <main id="phases"></main>
 
   <footer>
-    Based on the agreed plan — 51 original items, extended to 77 after two review rounds on 15.07
+    Based on the agreed plan — 51 original items, extended through two review rounds (item 74 closed by decision on 17.07
     (product phase removed — personal use only).
     "Tested" = code plus a passing automated test or live verification. Updated every working session.
   </footer>
@@ -456,15 +456,12 @@ const ITEMS = [
   { n:72, p:9, t:"Mobile card layout", d:"Dashboard tables collapse to cards on phones", s:"done" },
   { n:73, p:9, t:"Login hardening", d:"Secure cookie flag (HTTPS) + failed-attempt throttle", s:"tested",
     note:"Secure/HttpOnly/SameSite cookies on Vercel + 1.5s delay on wrong password (verified)" },
-  { n:74, p:9, t:"Key rotation coordination", d:"The Anthropic key is shared with the platform project that has leaked git history", s:"key",
-    w:"Mendy rotates the key; I update trend-engine .env + GitHub secret in the same step" },
-
   // ---- added 15.07 (night) from the external plan review ----
   { n:75, p:8, t:"Breadth expansion program", d:"The vision was 'everything, including a pool lamp' — widening the funnel from ~40 queries/day toward full category coverage", s:"partial",
     w:"Remaining: per-category TikTok runs (~$25/mo Apify) + Reddit approval",
     note:"15.07 progress: Trends seeds 3→15/day, Amazon 0→6 categories, EDGAR/GDELT watchlists 20→40 entities. TikTok and Reddit are the last narrow spots" },
-  { n:76, p:8, t:"Earnings-call transcripts source", d:"The Wall Street color layer the plan actually asked for — 'we're seeing incredible demand for X' — via a dedicated transcripts API (API Ninjas / FMP), Claude extracting product mentions + sentiment", s:"key",
-    w:"API Ninjas key is wired, but the transcripts endpoint turned out premium-only ($39/mo) — approve it, or we skip the Wall-Street layer for now" },
+  { n:76, p:8, t:"Earnings-call transcripts source", d:"The Wall-Street color layer — what CEOs say on calls ($39/mo premium API)", s:"todo",
+    w:"Deferred by decision 17.07 — revisit in August; free SEC filings cover the corporate layer meanwhile" },
   { n:77, p:8, t:"Amazon ASIN→title resolution", d:"Resolving best-seller codes to product titles so extraction can read the Amazon source", s:"tested",
     note:"LIVE + tested: top-20 per category via Keepa product API, cached in asin_titles (repeat sellers cost 0 tokens); runs in the daily pipeline before extraction" },
 ];
