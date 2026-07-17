@@ -148,7 +148,7 @@
 <div class="wrap">
   <header>
     <h1>📈 Trend Engine — Progress Tracker</h1>
-    <p class="sub">Updated <b>16.07.2026 (evening)</b> · <b>7 sources live</b> · <b>First real trends detected</b> · Backtest: <b>93% early recall</b> · <b>Dashboard: <a href="https://trend-engine-dashboard.vercel.app">trend-engine-dashboard.vercel.app</a></b> · DB: Neon · Reports: Telegram · Month spend: <b class="mono">$1.75</b></p>
+    <p class="sub">Updated <b>17.07.2026</b> · <b>7 sources live</b> · <b>First real trends detected</b> · Backtest: <b>93% early recall</b> · <b>Dashboard: <a href="https://trend-engine-dashboard.vercel.app">trend-engine-dashboard.vercel.app</a></b> · DB: Neon · Reports: Telegram · Month spend: <b class="mono">$2.67</b></p>
   </header>
 
   <section class="summary" aria-label="Overall summary">
@@ -317,8 +317,8 @@ const ITEMS = [
   { n:4,  p:0, t:"Full DB schema", d:"entities + aliases + merge history, raw_items + hash dedupe, daily_signals, anomalies, trend_clusters + evidence, companies, runs, api_costs, llm_calls, trend_reports", s:"tested" },
   { n:5,  p:0, t:"BaseCollector class", d:"Uniform interface, retry, rate limiting, logging, cost tracking", s:"tested" },
   { n:6,  p:0, t:"Orchestrator", d:"Runs everything, records every run and every API cost", s:"tested" },
-  { n:7,  p:0, t:"Daily scheduling on GitHub Actions", d:"10:30 UTC; API calls only — no scraping from Actions IPs", s:"done",
-    note:"Workflow + all secrets configured; manual runs verified, first cron firing to be confirmed" },
+  { n:7,  p:0, t:"Daily scheduling on GitHub Actions", d:"10:30 UTC; API calls only — no scraping from Actions IPs", s:"tested",
+    note:"PROVEN 17.07: first fully autonomous successful run (#12) — collected from every source, analyzed, and reported with zero human touch. GDELT time budget worked as designed" },
   { n:8,  p:0, t:"Daily run summary", d:"Success/failure, items collected, cost", s:"tested",
     note:"Arrives in your Telegram with a per-provider cost breakdown; email activates with Resend" },
   { n:9,  p:0, t:"Ground truth — labeled trend list", d:"15–20 known trends + takeoff dates + success definition (north star)", s:"done",
