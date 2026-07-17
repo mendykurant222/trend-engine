@@ -221,22 +221,37 @@ def index():
                            stage_colors=STAGE_COLORS, title="Active trends")
 
 
+ENTITY_SORTS = {"mentions", "change", "newest", "name"}
+
+
 @app.route("/entities")
 def entities():
     """Every tracked entity with recent momentum (plan item 67) —
     the thing to watch while trends are still forming."""
     conn = get_conn()
     q = request.args.get("q", "").strip()
+    f_category = request.args.get("category", "")
+    f_source = request.args.get("source", "")
+    f_direction = request.args.get("direction", "")
+    f_min = float(request.args.get("min_mentions") or 0)
+    sort = request.args.get("sort", "mentions")
+    if sort not in ENTITY_SORTS:
+        sort = "mentions"
+
     rows = conn.execute("""
         select e.id, e.canonical_name, e.category, e.first_seen,
                coalesce(sum(s.value) filter (where s.signal_date >= current_date - 13), 0) as m14,
+               coalesce(sum(s.value) filter (where s.signal_date >= current_date - 6), 0) as last7,
+               coalesce(sum(s.value) filter (where s.signal_date between current_date - 13
+                                             and current_date - 7), 0) as prev7,
                count(distinct s.source) as n_sources,
                coalesce(string_agg(distinct s.source, ',' order by s.source), '') as sources
         from entities e
         left join daily_signals s on s.entity_id = e.id and s.metric = 'mentions'
-        where e.status = 'active' and (%(q)s = '' or e.canonical_name ilike '%%' || %(q)s || '%%')
-        group by e.id
-        order by m14 desc, e.first_seen desc limit 200""", {"q": q}).fetchall()
+        where e.status = 'active'
+          and (%(q)s = '' or e.canonical_name ilike '%%' || %(q)s || '%%')
+          and (%(category)s = '' or e.category = %(category)s)
+        group by e.id""", {"q": q, "category": f_category}).fetchall()
 
     since = date.today() - timedelta(days=29)
     days = [since + timedelta(days=i) for i in range(30)]
@@ -248,14 +263,47 @@ def entities():
                where entity_id = any(%s) and metric = 'mentions' and signal_date >= %s
                group by 1, 2""", (ids, since)).fetchall():
             series.setdefault(eid, {})[d] = float(v)
+
+    today = date.today()
     out = []
     for r in rows:
-        vals = [series.get(r[0], {}).get(d, 0) for d in days]
+        eid, name, category, first_seen, m14, last7, prev7, n_sources, sources = r
+        m14, last7, prev7 = float(m14), float(last7), float(prev7)
+        # direction: this week vs the week before
+        if (today - first_seen).days <= 7:
+            direction, delta_pct = "new", None
+        elif prev7 <= 0:
+            direction, delta_pct = ("rising", None) if last7 > 0 else ("flat", None)
+        else:
+            delta_pct = (last7 - prev7) / prev7 * 100
+            direction = "rising" if delta_pct >= 25 else "falling" if delta_pct <= -25 else "flat"
+        if f_direction and direction != f_direction:
+            continue
+        if f_source and f_source not in (sources or "").split(","):
+            continue
+        if m14 < f_min:
+            continue
+        vals = [series.get(eid, {}).get(d, 0) for d in days]
         peak_date = days[vals.index(max(vals))] if max(vals) > 0 else None
-        out.append({"id": r[0], "name": r[1], "category": r[2], "first_seen": r[3],
-                    "m14": float(r[4]), "n_sources": r[5], "sources": r[6],
+        out.append({"id": eid, "name": name, "category": category, "first_seen": first_seen,
+                    "m14": m14, "last7": last7, "prev7": prev7,
+                    "delta_pct": delta_pct, "direction": direction,
+                    "n_sources": n_sources, "sources": sources,
                     "spark": sparkline(vals, peak_date=peak_date)})
-    return render_template("entities.html", entities=out, q=q,
+
+    keys = {"mentions": lambda e: -e["m14"],
+            "change": lambda e: -(e["delta_pct"] if e["delta_pct"] is not None else -1e9),
+            "newest": lambda e: (date.min - e["first_seen"]).days if False else e["first_seen"],
+            "name": lambda e: e["name"]}
+    out.sort(key=keys[sort], reverse=(sort == "newest"))
+    out = out[:200]
+
+    categories = [r[0] for r in conn.execute(
+        "select distinct category from entities where status='active' and category is not null order by 1").fetchall()]
+    sources = [r[0] for r in conn.execute(
+        "select distinct source from daily_signals order by 1").fetchall()]
+    return render_template("entities.html", entities=out, q=q, args=request.args,
+                           categories=categories, sources=sources,
                            window=f"{days[0].strftime('%d.%m')} – {days[-1].strftime('%d.%m')}",
                            title="Entities")
 

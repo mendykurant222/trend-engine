@@ -1,31 +1,72 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>🏷️ Entities</h1>
-<p class="muted">Every product, brand, and micro-trend the engine is tracking — before they form trends.</p>
+<p class="muted">Every product, brand, and micro-trend the engine is tracking — the raw material trends are made of.</p>
+
+<details class="card" style="font-size:.88rem;">
+  <summary style="cursor:pointer; font-weight:600;">❓ How to read this page</summary>
+  <ul style="margin:10px 0 4px; padding-left:20px; line-height:1.7;">
+    <li><b>Mentions 14d</b> — total attention volume over the last 14 days, summed across all sources (posts, searches, videos, articles, filings). It answers "how much noise?", not "which way?".</li>
+    <li><b>Δ week</b> — the direction you asked about: this week's volume vs the week before. ▲ rising (+25% or more), ▼ falling (−25% or less), ≈ flat, 🆕 new (first seen within 7 days — no prior week to compare).</li>
+    <li><b>Sources</b> — how many independent platforms mention it. 1 source = chatter; 3+ sources = something real is moving (hover to see which).</li>
+    <li><b>Sparkline</b> — the 30-day shape. 🟠 marks the peak day (hover for the value); the last dot is today. A right-rising line + multiple sources = a trend candidate before it becomes an official trend.</li>
+  </ul>
+</details>
 
 <div class="card">
-  <form class="filters" method="get">
+  <form class="filters" method="get" id="f">
     <label>Search <input name="q" value="{{ q }}" placeholder="entity name"></label>
-    <button class="primary" type="submit">Filter</button>
+    <label>Category
+      <select name="category" onchange="f.submit()">
+        <option value="">all</option>
+        {% for c in categories %}<option value="{{ c }}" {{ 'selected' if args.get('category')==c }}>{{ c }}</option>{% endfor %}
+      </select></label>
+    <label>Source
+      <select name="source" onchange="f.submit()">
+        <option value="">any</option>
+        {% for s in sources %}<option value="{{ s }}" {{ 'selected' if args.get('source')==s }}>{{ s }}</option>{% endfor %}
+      </select></label>
+    <label>Direction
+      <select name="direction" onchange="f.submit()">
+        <option value="">all</option>
+        {% for d, lbl in [('rising','▲ rising'),('falling','▼ falling'),('flat','≈ flat'),('new','🆕 new')] %}
+          <option value="{{ d }}" {{ 'selected' if args.get('direction')==d }}>{{ lbl }}</option>{% endfor %}
+      </select></label>
+    <label>Min mentions 14d <input name="min_mentions" type="number" min="0" value="{{ args.get('min_mentions','') }}" style="width:80px" onchange="f.submit()"></label>
+    <label>Sort
+      <select name="sort" onchange="f.submit()">
+        {% for s, lbl in [('mentions','volume'),('change','biggest change'),('newest','newest'),('name','name')] %}
+          <option value="{{ s }}" {{ 'selected' if args.get('sort','mentions')==s }}>{{ lbl }}</option>{% endfor %}
+      </select></label>
+    <button class="primary" type="submit">Apply</button>
+    {% if args %}<a href="{{ url_for('entities') }}" class="muted small" style="align-self:center;">reset</a>{% endif %}
   </form>
 </div>
 
 <div class="card">
+  <p class="muted small" style="margin:0 0 8px;">{{ entities|length }} entities shown</p>
   {% if entities %}
   <table>
-    <tr><th>Entity</th><th>First seen</th><th>Mentions 14d</th><th>Sources</th><th>{{ window }} (🟠 = peak, hover for value)</th></tr>
+    <tr><th>Entity</th><th>First seen</th><th>Mentions 14d</th><th>Δ week</th><th>Sources</th><th>{{ window }} (🟠 = peak)</th></tr>
     {% for e in entities %}
     <tr>
       <td><b>{{ e.name }}</b><br><span class="muted small">{{ e.category or '—' }}</span></td>
       <td class="mono small">{{ e.first_seen }}</td>
       <td class="mono">{{ '%.0f' % e.m14 }}</td>
+      <td class="mono">
+        {% if e.direction == 'new' %}<span style="color:var(--watch)">🆕 new</span>
+        {% elif e.delta_pct is none %}{{ '▲' if e.direction == 'rising' else '≈' }}
+        {% elif e.direction == 'rising' %}<span style="color:var(--accent)">▲ +{{ '%.0f' % e.delta_pct }}%</span>
+        {% elif e.direction == 'falling' %}<span style="color:#C43D3D">▼ {{ '%.0f' % e.delta_pct }}%</span>
+        {% else %}<span class="muted">≈ {{ '%+.0f' % e.delta_pct }}%</span>{% endif %}
+      </td>
       <td class="mono small" title="{{ e.sources }}">{{ e.n_sources }}</td>
       <td>{{ e.spark }}</td>
     </tr>
     {% endfor %}
   </table>
   {% else %}
-  <div class="empty">No entities yet — they appear as the daily runs read the sources.</div>
+  <div class="empty">Nothing matches these filters — try <a href="{{ url_for('entities') }}">resetting</a>.</div>
   {% endif %}
 </div>
 {% endblock %}
