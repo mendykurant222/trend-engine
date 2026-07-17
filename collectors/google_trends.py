@@ -56,8 +56,11 @@ class GoogleTrendsCollector(BaseCollector):
         anchor = self.config.get("anchor_query", "weather")
         interest_max = int(self.config.get("interest_max", 25))
         today = date.today().isoformat()
+        # the daily cap applies to watchlist runs; an explicit list (bulk
+        # backfill) is taken in full
+        pool = entities if entities is not None else self.watch_entities[:interest_max]
         items: list[dict] = []
-        for entity_id, name in (entities or self.watch_entities)[:interest_max]:
+        for entity_id, name in pool:
             data = self._search({
                 "q": f"{name},{anchor}",
                 "data_type": "TIMESERIES",
