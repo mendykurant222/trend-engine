@@ -331,8 +331,9 @@ const ITEMS = [
 
   { n:12, p:1, t:"Google Trends via paid API", d:"SerpApi as the primary path (pytrends is dead) + anchor-query normalization", s:"tested",
     note:"LIVE — real rising queries (\"tiktok made me buy it products\" +550%); 3 seeds/day fits the free tier (100/month)" },
-  { n:13, p:1, t:"Reddit API", d:"18 starter subreddits (target 100–200 by category)", s:"ext",
-    w:"Reddit's review of the app request; after approval the repo goes private", note:"Collector fully coded and ready" },
+  { n:13, p:1, t:"Reddit API", d:"The engine's most important niche-discovery source", s:"partial",
+    w:"Reddit's app approval for the full API (scores, comments, all subs daily)",
+    note:"INTERIM MODE LIVE 20.07: public RSS feeds, titles-only, rotating 30-subreddit slice daily (all ~155 covered every ~5 days). The OAuth collector takes over automatically the moment credentials land" },
   { n:14, p:1, t:"Amazon — Movers & Shakers + Best Sellers", d:"Via Keepa, no self-scraping", s:"tested",
     note:"LIVE 15.07 — 6 categories × 200 best-sellers daily, live-tested. Next: ASIN→title resolution (item 77) so extraction can read them; Movers & Shakers after" },
   { n:15, p:1, t:"TikTok Creative Center", d:"Via Apify; doubles as a calibration benchmark", s:"tested",
