@@ -34,8 +34,8 @@
     <label>⭐ <select name="watched"><option value="">all</option><option value="1" {{ 'selected' if args.get('watched')=='1' }}>watchlist</option></select></label>
     <label>Sort
       <select name="sort">
-        {% for s in ['strength','newest','confidence'] %}
-          <option value="{{ s }}" {{ 'selected' if args.get('sort')==s }}>{{ s }}</option>{% endfor %}
+        {% for s, lbl in [('momentum','🚀 momentum (rising fastest)'),('strength','strength (size)'),('newest','newest'),('confidence','confidence')] %}
+          <option value="{{ s }}" {{ 'selected' if args.get('sort', 'momentum')==s }}>{{ lbl }}</option>{% endfor %}
       </select></label>
     <button class="primary" type="submit">Filter</button>
   </form>
@@ -44,7 +44,7 @@
 <div class="card">
   {% if trends %}
   <table>
-    <tr><th></th><th>Trend</th><th>Stage</th><th>Strength</th><th>Confidence</th><th>Entities</th><th>Tickers</th><th>Age</th></tr>
+    <tr><th></th><th>Trend</th><th>Momentum</th><th>Δ week</th><th>Stage</th><th>Strength</th><th>Confidence</th><th>Entities</th><th>Tickers</th><th>Age</th></tr>
     {% for t in trends %}
     <tr>
       <td>
@@ -53,6 +53,12 @@
         </form>
       </td>
       <td><a href="{{ url_for('trend', tid=t[0]) }}"><b>{{ t[1] }}</b></a><br><span class="muted small">{{ t[2] }}</span></td>
+      <td class="mono"><b style="color:{{ 'var(--accent)' if t[11] >= 60 else ('#C43D3D' if t[11] < 45 else 'inherit') }}">{{ t[11] }}</b></td>
+      <td class="mono small">
+        {% if t[12] is none %}<span class="muted">new</span>
+        {% elif t[12] >= 0 %}<span style="color:var(--accent)">+{{ '%.0f' % t[12] }}%</span>
+        {% else %}<span style="color:#C43D3D">{{ '%.0f' % t[12] }}%</span>{% endif %}
+      </td>
       <td><span class="chip" style="--sc:{{ stage_colors.get(t[3], '#888') }}">{{ t[3] }}</span></td>
       <td class="mono">{{ t[4] }}</td>
       <td class="mono">{{ t[5] }}</td>

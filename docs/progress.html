@@ -467,6 +467,10 @@ const ITEMS = [
     note:"LIVE + tested: top-20 per category via Keepa product API, cached in asin_titles (repeat sellers cost 0 tokens); runs in the daily pipeline before extraction" },
   { n:78, p:8, t:"Pre-peak bias package", d:"Mendy's catch 17.07: the entity list favored already-peaked topics — the engine must surface trends BEFORE the peak", s:"tested",
     note:"Four fixes live: TikTok popularity curves stored as 7-day per-hashtag history; Google 'Breakout' queries auto-watched + anomaly scores ×1.3; 🌱 Early-radar preset (small + multi-source + not past peak); climbing/past-peak phase chips + filter. Reddit approval remains the biggest pre-peak unlock" },
+  { n:79, p:8, t:"Rank by momentum, not size", d:"Mendy's review 21.07: the daily report kept highlighting products already at their peak", s:"tested",
+    note:"Root cause confirmed in data — 5 of the top 10 by volume were DECLINING (humanoid robot −64%, apple music −74%). Reports + dashboard now rank by a momentum score (rate of change, log-scaled, damped for tiny bases and weighted by multi-source agreement). New top-5 surfaces levoit air purifier +1489%, sparkling ice +1142%, water bottle craze +596% instead of 'wuwa hype'" },
+  { n:80, p:8, t:"Fix: alert channel was silent since launch", d:"Found while testing item 79 — no alert had ever fired", s:"tested",
+    note:"new_entity anomalies require 2+ sources by construction but were never FLAGGED cross-source, and cross-source is the alert trigger. In early weeks new_entity is the only anomaly type that can fire (surges need baselines), so the channel stayed silent. Flag added + 187 existing rows backfilled → 5 real alerts fired today (buzz lightyear action figure, the ordinary skincare). Alert text now renders each anomaly type correctly" },
 ];
 
 let filter = null;

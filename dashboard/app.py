@@ -194,6 +194,7 @@ def _liveness(conn):
 
 
 SORT_ORDERS = {                     # plan item 71
+    "momentum": "t.strength desc, t.last_updated desc",   # re-sorted in Python
     "strength": "t.strength desc, t.last_updated desc",
     "newest": "t.first_detected desc, t.strength desc",
     "confidence": "t.confidence desc, t.strength desc",
@@ -204,10 +205,19 @@ SORT_ORDERS = {                     # plan item 71
 def index():
     conn = get_conn()
     params = _list_params() | {"status": "active"}
-    sort = request.args.get("sort", "strength")
+    sort = request.args.get("sort", "momentum")
     sql = TREND_LIST_SQL.replace("order by t.strength desc, t.last_updated desc",
-                                 "order by " + SORT_ORDERS.get(sort, SORT_ORDERS["strength"]))
+                                 "order by " + SORT_ORDERS.get(sort, SORT_ORDERS["momentum"]))
     trends = conn.execute(sql, params).fetchall()
+
+    # momentum = rate of change; the default view, because ranking by size
+    # surfaces trends at or past their peak
+    from analysis.momentum import trend_momentum
+    mom = trend_momentum(conn, [t[0] for t in trends])
+    trends = [tuple(t) + (mom.get(t[0], {}).get("momentum", 50),
+                          mom.get(t[0], {}).get("growth_pct")) for t in trends]
+    if sort == "momentum":
+        trends.sort(key=lambda t: (t[11], t[4]), reverse=True)
     categories = [r[0] for r in conn.execute(
         "select distinct category from trend_clusters where category is not null order by 1").fetchall()]
     stats = conn.execute("""

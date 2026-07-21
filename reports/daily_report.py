@@ -16,11 +16,21 @@ DIRECTION_MARK = {"positive": "+", "negative": "−"}
 
 
 def _top_trends(conn, n: int) -> list[dict]:
-    rows = conn.execute(
+    """Ranked by MOMENTUM (rate of change), not strength (size) — ranking by
+    size surfaces things at or past their peak, which is the opposite of the
+    engine's job."""
+    from analysis.momentum import trend_momentum
+
+    candidates = conn.execute(
         """select t.id, t.name, t.stage, t.strength, t.confidence, t.first_detected
            from trend_clusters t where t.status = 'active'
-           order by t.strength desc, t.last_updated desc limit %s""", (n,),
-    ).fetchall()
+           order by t.last_updated desc limit 60""").fetchall()
+    if not candidates:
+        return []
+    mom = trend_momentum(conn, [r[0] for r in candidates])
+    candidates.sort(key=lambda r: (mom.get(r[0], {}).get("momentum", 50), r[3]), reverse=True)
+    rows = candidates[:n]
+
     trends = []
     for tid, name, stage, strength, confidence, first_detected in rows:
         entities = [r[0] for r in conn.execute(
@@ -33,9 +43,13 @@ def _top_trends(conn, n: int) -> list[dict]:
                where tc.cluster_id = %s
                order by tc.material desc, tc.confidence desc limit 6""",
             (tid,)).fetchall()
+        m = mom.get(tid, {})
         trends.append({"id": tid, "name": name, "stage": stage, "strength": strength,
                        "confidence": confidence, "first_detected": first_detected,
-                       "entities": entities, "companies": companies})
+                       "entities": entities, "companies": companies,
+                       "momentum": m.get("momentum", 50),
+                       "growth_pct": m.get("growth_pct"),
+                       "last7": m.get("last7", 0)})
     return trends
 
 
@@ -51,10 +65,13 @@ def build_daily_report(conn, config: dict, target_date: date | None = None) -> t
         "select count(*) from anomalies where signal_date = %s", (target_date,)
     ).fetchone()[0]
 
-    strongest = trends[0]
-    summary = (f"{len(trends)} active trends; strongest: {esc(strongest['name'])} "
-               f"(strength {strongest['strength']}, {esc(strongest['stage'])}). "
-               f"{n_anomalies} anomalies recorded today.")
+    from analysis.momentum import label
+
+    top = trends[0]
+    summary = (f"Fastest-rising: {esc(top['name'])} "
+               f"({label(top['momentum'], top['growth_pct'])}"
+               + (f", {top['growth_pct']:+.0f}% week over week" if top["growth_pct"] is not None else "")
+               + f"). {n_anomalies} anomalies recorded today.")
 
     lines = [
         f"📊 <b>Trend Engine — Daily Report</b>",
@@ -62,16 +79,18 @@ def build_daily_report(conn, config: dict, target_date: date | None = None) -> t
         "",
         summary,
         "",
-        "<b>Top Trends</b>",
+        "<b>Rising fastest</b> <i>(ranked by momentum, not size)</i>",
     ]
     dash = config.get("reports", {}).get("dashboard_url", "").rstrip("/")
     for i, t in enumerate(trends, 1):
         age = (target_date - t["first_detected"]).days
         name = (f'<a href="{dash}/trend/{t["id"]}">{esc(t["name"])}</a>'
                 if dash else f"<b>{esc(t['name'])}</b>")
+        growth = (f"{t['growth_pct']:+.0f}% wow" if t["growth_pct"] is not None
+                  else "new this week")
         lines.append(
-            f"{i}. 📈 {name} — {esc(t['stage'])} | "
-            f"strength {t['strength']} | confidence {t['confidence']} | day {age}")
+            f"{i}. {label(t['momentum'], t['growth_pct'])} {name} — {growth} | "
+            f"momentum {t['momentum']} | {esc(t['stage'])} | day {age}")
         if t["entities"]:
             lines.append(f"    {esc(', '.join(t['entities'][:6]))}")
         if t["companies"]:
@@ -121,10 +140,18 @@ def check_alerts(conn, config: dict, target_date: date | None = None) -> list[st
         if not fires or len(alerts) >= 5:
             continue
         tag = "⭐ watchlist" if (watched and not (cross and score >= min_score)) else "cross-source"
+        if kind == "new_entity":
+            detail = (f"{details.get('mentions_in_window', '?')} mentions across "
+                      f"{len(details.get('sources') or [])} sources — first seen "
+                      f"{details.get('first_seen', 'recently')}")
+        elif kind == "acceleration":
+            detail = (f"velocity {details.get('velocity_prev', '?')} → "
+                      f"{details.get('velocity_now', '?')}/day")
+        else:
+            detail = f"today {details.get('today', '?')} vs baseline {details.get('baseline_mean', '?')}"
         alerts.append(
             f"🚨 <b>Trend Alert: {esc(name)}</b>\n"
-            f"{tag} {esc(kind)} — score {score:.0f} ({esc(source)})\n"
-            f"today {details.get('today', '?')} vs baseline {details.get('baseline_mean', '?')}")
+            f"{tag} {esc(kind)} — score {score:.0f} ({esc(source)})\n{esc(detail)}")
     return alerts
 
 

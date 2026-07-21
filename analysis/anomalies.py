@@ -166,6 +166,11 @@ def detect_anomalies(conn, config: dict, target_date: date | None = None) -> int
             found.append((eid, "multi", "new_entity", score, {
                 "mentions_in_window": total, "sources": sorted(sources),
                 "first_seen": str(seen),
+                # a new-entity surge already required 2+ independent sources,
+                # so it IS cross-source — without this flag the alert channel
+                # stays silent in early weeks, when new_entity is the only
+                # anomaly type that can fire (no baselines yet for surges)
+                "cross_source": len(sources) >= 2,
             }))
 
     # entities surfaced by a Google "Breakout" query in the last 7 days are
