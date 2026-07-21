@@ -51,6 +51,13 @@ create index if not exists raw_items_collected on raw_items (collected_at);
 -- entity-extraction bookkeeping (Phase 1)
 alter table raw_items add column if not exists entities_extracted_at timestamptz;
 
+-- what KIND of thing this is (added 21.07): only 'product' entities are
+-- sourceable/sellable and belong in the daily report. Services, games, media,
+-- companies and concepts stay for context but never headline.
+alter table entities add column if not exists kind text;
+alter table entities add column if not exists product_url text;
+create index if not exists entities_kind on entities (kind) where status = 'active';
+
 -- which entities appear in which raw items — the basis for mention counts
 create table if not exists raw_item_entities (
     raw_item_id bigint not null references raw_items(id),

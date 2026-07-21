@@ -255,6 +255,7 @@ def entities():
     if sort not in ENTITY_SORTS:
         sort = "mentions"
 
+    f_kind = request.args.get("kind", "product")   # products by default
     rows = conn.execute("""
         select e.id, e.canonical_name, e.category, e.first_seen,
                coalesce(sum(s.value) filter (where s.signal_date >= current_date - 13), 0) as m14,
@@ -262,13 +263,15 @@ def entities():
                coalesce(sum(s.value) filter (where s.signal_date between current_date - 13
                                              and current_date - 7), 0) as prev7,
                count(distinct s.source) as n_sources,
-               coalesce(string_agg(distinct s.source, ',' order by s.source), '') as sources
+               coalesce(string_agg(distinct s.source, ',' order by s.source), '') as sources,
+               e.kind, e.product_url
         from entities e
         left join daily_signals s on s.entity_id = e.id and s.metric = 'mentions'
         where e.status = 'active'
           and (%(q)s = '' or e.canonical_name ilike '%%' || %(q)s || '%%')
           and (%(category)s = '' or e.category = %(category)s)
-        group by e.id""", {"q": q, "category": f_category}).fetchall()
+          and (%(kind)s = '' or e.kind = %(kind)s)
+        group by e.id""", {"q": q, "category": f_category, "kind": f_kind}).fetchall()
 
     since = date.today() - timedelta(days=29)
     days = [since + timedelta(days=i) for i in range(30)]
@@ -284,7 +287,8 @@ def entities():
     today = date.today()
     out = []
     for r in rows:
-        eid, name, category, first_seen, m14, last7, prev7, n_sources, sources = r
+        (eid, name, category, first_seen, m14, last7, prev7, n_sources, sources,
+         kind, purl) = r
         m14, last7, prev7 = float(m14), float(last7), float(prev7)
         # direction: this week vs the week before
         if (today - first_seen).days <= 7:
@@ -318,7 +322,8 @@ def entities():
         out.append({"id": eid, "name": name, "category": category, "first_seen": first_seen,
                     "m14": m14, "last7": last7, "prev7": prev7,
                     "delta_pct": delta_pct, "direction": direction, "phase": phase,
-                    "n_sources": n_sources, "sources": sources,
+                    "n_sources": n_sources, "sources": sources, "kind": kind,
+                    "product_url": purl,
                     "spark": sparkline(vals, peak_date=peak_date)})
 
     keys = {"mentions": lambda e: -e["m14"],

@@ -14,6 +14,136 @@ log = logging.getLogger("daily_report")
 
 DIRECTION_MARK = {"positive": "+", "negative": "−"}
 
+# what a human calls each source
+SOURCE_NAMES = {
+    "reddit": "Reddit", "tiktok": "TikTok", "tiktok_curve": "TikTok",
+    "google_trends": "Google searches", "google_trends_interest": "Google searches",
+    "amazon": "Amazon best-sellers", "youtube": "YouTube", "gdelt": "News",
+    "sec_edgar": "Company filings", "research": "Research reports",
+}
+
+
+def _friendly_sources(sources: list[str]) -> list[str]:
+    seen, out = set(), []
+    for s in sources:
+        name = SOURCE_NAMES.get(s)
+        if name and name not in seen:
+            seen.add(name)
+            out.append(name)
+    return out
+
+
+def _growth_phrase(last7: float, prev7: float, age_days: int) -> str:
+    """Plain English, no jargon."""
+    if prev7 <= 0:
+        return f"brand new — nobody was talking about it a week ago"
+    ratio = last7 / prev7
+    if ratio >= 10:
+        return f"exploded {ratio:.0f}× this week ({prev7:.0f} → {last7:.0f} mentions)"
+    if ratio >= 3:
+        return f"grew {ratio:.1f}× this week ({prev7:.0f} → {last7:.0f} mentions)"
+    if ratio >= 1.25:
+        return f"up {(ratio - 1) * 100:.0f}% this week ({prev7:.0f} → {last7:.0f} mentions)"
+    return f"steady this week ({last7:.0f} mentions)"
+
+
+def _why_early(age_days: int, n_sources: int, last7: float, peak_recent: bool) -> str:
+    """The proof line: why we think this is still early."""
+    bits = []
+    if age_days <= 10:
+        when = ("first spotted today" if age_days == 0 else
+                "first spotted yesterday" if age_days == 1 else
+                f"first spotted {age_days} days ago")
+        bits.append(when)
+    if n_sources >= 3:
+        bits.append(f"{n_sources} separate platforms agree")
+    elif n_sources == 2:
+        bits.append("2 platforms agree")
+    else:
+        bits.append("one platform only so far — unconfirmed")
+    if peak_recent:
+        bits.append("still climbing")
+    if last7 < 200:
+        bits.append("still small — not mainstream yet")
+    return " · ".join(bits) if bits else "gaining attention"
+
+
+def _top_products(conn, n: int) -> list[dict]:
+    """The report shows PRODUCTS a person could source and sell — not services,
+    games, chains or concepts. Ranked by momentum (rate of change)."""
+    from analysis.momentum import momentum_score, growth_pct
+
+    rows = conn.execute(
+        """select e.id, e.canonical_name, e.category, e.first_seen, e.product_url,
+                  coalesce(sum(s.value) filter (where s.signal_date >= current_date - 6), 0),
+                  coalesce(sum(s.value) filter (where s.signal_date between current_date - 13
+                                                and current_date - 7), 0),
+                  coalesce(array_agg(distinct s.source) filter (where s.source is not null), '{}'),
+                  max(s.signal_date) filter (where s.value = (
+                      select max(s2.value) from daily_signals s2
+                      where s2.entity_id = e.id and s2.metric = 'mentions'
+                        and s2.signal_date >= current_date - 29))
+           from entities e
+           left join daily_signals s on s.entity_id = e.id and s.metric = 'mentions'
+           where e.status = 'active' and e.kind = 'product'
+           group by e.id
+           having coalesce(sum(s.value) filter (where s.signal_date >= current_date - 6), 0) > 0
+        """).fetchall()
+
+    products = []
+    for eid, name, category, first_seen, url, last7, prev7, sources, peak_date in rows:
+        last7, prev7 = float(last7), float(prev7)
+        srcs = _friendly_sources(list(sources))
+        if not srcs:
+            continue
+        products.append({
+            "id": eid, "name": name, "category": category, "url": url,
+            "last7": last7, "prev7": prev7,
+            "momentum": momentum_score(last7, prev7, len(srcs)),
+            "growth": growth_pct(last7, prev7),
+            "sources": srcs, "first_seen": first_seen,
+            "peak_recent": bool(peak_date and (date.today() - peak_date).days <= 2),
+        })
+    products.sort(key=lambda p: (p["momentum"], p["last7"]), reverse=True)
+    return products[:n]
+
+
+def _proof_quote(conn, entity_id: int, name: str) -> str | None:
+    """One real thing someone actually posted — the receipt.
+
+    Every quote must be about THIS product. An Amazon best-seller list holds 20
+    titles; showing the first one would "prove" a water bottle with a coffee
+    listing, so the matching title is located or the quote is dropped.
+    """
+    words = {w for w in name.lower().split() if len(w) > 2}
+    rows = conn.execute(
+        """select ri.source, ri.payload from raw_item_entities rie
+           join raw_items ri on ri.id = rie.raw_item_id
+           where rie.entity_id = %s and ri.source in ('reddit', 'tiktok', 'amazon', 'google_trends')
+           order by ri.collected_at desc limit 8""", (entity_id,)).fetchall()
+    for source, payload in rows:
+        if source == "reddit" and payload.get("title"):
+            return f"Reddit: “{payload['title'][:90]}”"
+        if source == "tiktok":
+            r = payload.get("row", {})
+            if r.get("name"):
+                return (f"TikTok: #{r['name']} ranked #{r.get('rank', '?')} "
+                        f"in {r.get('industry', 'US')}")
+        if source == "google_trends" and payload.get("query"):
+            val = payload.get("value", "")
+            return f"Google: “{payload['query']}” search {val.lower() if val else 'rising'}"
+        if source == "amazon" and payload.get("titles"):
+            best, best_hits = None, 0
+            for t in payload["titles"]:
+                title = (t.get("title") or "").lower()
+                hits = sum(1 for w in words if w in title)
+                if hits > best_hits:
+                    best, best_hits = t, hits
+            if best and best_hits >= max(1, len(words) // 2):
+                return (f"Amazon: #{best.get('rank', '?')} best-seller — "
+                        f"{(best.get('title') or '')[:70]}")
+    return None
+
 
 def _top_trends(conn, n: int) -> list[dict]:
     """Ranked by MOMENTUM (rate of change), not strength (size) — ranking by
@@ -54,54 +184,48 @@ def _top_trends(conn, n: int) -> list[dict]:
 
 
 def build_daily_report(conn, config: dict, target_date: date | None = None) -> tuple[str, list[int]]:
-    """Returns (telegram-HTML text, reported cluster ids). Empty text = nothing to report."""
+    """The product-first daily message: what to look at, why, and where to see it.
+
+    Written for a reader who does not care about the machinery — every line is
+    a product, a plain-English reason, and a link. Ranked by how fast talk about
+    it is growing, not by how loud it already is.
+    """
     target_date = target_date or date.today()
     top_n = config.get("reports", {}).get("daily_top_n", 5)
-    trends = _top_trends(conn, top_n)
-    if not trends:
+    products = _top_products(conn, top_n)
+    if not products:
         return "", []
 
-    n_anomalies = conn.execute(
-        "select count(*) from anomalies where signal_date = %s", (target_date,)
-    ).fetchone()[0]
-
-    from analysis.momentum import label
-
-    top = trends[0]
-    summary = (f"Fastest-rising: {esc(top['name'])} "
-               f"({label(top['momentum'], top['growth_pct'])}"
-               + (f", {top['growth_pct']:+.0f}% week over week" if top["growth_pct"] is not None else "")
-               + f"). {n_anomalies} anomalies recorded today.")
-
     lines = [
-        f"📊 <b>Trend Engine — Daily Report</b>",
-        f"<i>{target_date.strftime('%d.%m.%Y')}</i>",
+        "🛍 <b>Products picking up speed</b>",
+        f"<i>{target_date.strftime('%d %B %Y')}</i>",
         "",
-        summary,
-        "",
-        "<b>Rising fastest</b> <i>(ranked by momentum, not size)</i>",
     ]
+    for i, p in enumerate(products, 1):
+        age = (target_date - p["first_seen"]).days
+        lines.append(f"<b>{i}. {esc(p['name'].title())}</b>"
+                     + (f" <i>({esc(p['category'])})</i>" if p["category"] else ""))
+        lines.append(f"📈 {esc(_growth_phrase(p['last7'], p['prev7'], age))}")
+        lines.append(f"👀 Seen on: {esc(', '.join(p['sources']))}")
+        proof = _proof_quote(conn, p["id"], p["name"])
+        if proof:
+            lines.append(f"💬 {esc(proof)}")
+        lines.append(f"✅ Why it looks early: "
+                     f"{esc(_why_early(age, len(p['sources']), p['last7'], p['peak_recent']))}")
+        if p["url"]:
+            lines.append(f'🛒 <a href="{p["url"]}">See the product</a>')
+        lines.append("")
+
     dash = config.get("reports", {}).get("dashboard_url", "").rstrip("/")
-    for i, t in enumerate(trends, 1):
-        age = (target_date - t["first_detected"]).days
-        name = (f'<a href="{dash}/trend/{t["id"]}">{esc(t["name"])}</a>'
-                if dash else f"<b>{esc(t['name'])}</b>")
-        growth = (f"{t['growth_pct']:+.0f}% wow" if t["growth_pct"] is not None
-                  else "new this week")
-        lines.append(
-            f"{i}. {label(t['momentum'], t['growth_pct'])} {name} — {growth} | "
-            f"momentum {t['momentum']} | {esc(t['stage'])} | day {age}")
-        if t["entities"]:
-            lines.append(f"    {esc(', '.join(t['entities'][:6]))}")
-        if t["companies"]:
-            parts = []
-            for ticker, exposure, direction, material in t["companies"]:
-                mark = DIRECTION_MARK.get(direction, "?")
-                star = "★" if material else ""
-                parts.append(f"{esc(ticker)}{mark}{star}")
-            lines.append(f"    💼 market lens: {' '.join(parts)}")
-    lines += ["", "<i>💼 = public-market lens (secondary) · ★ material · +/− direction</i>"]
-    return "\n".join(lines), [t["id"] for t in trends]
+    if dash:
+        lines.append(f'<i>Full detail and history: <a href="{dash}">open the dashboard</a></i>')
+
+    # keep grading intact: log the trends these products belong to
+    cluster_ids = [r[0] for r in conn.execute(
+        """select distinct tce.cluster_id from trend_cluster_entities tce
+           join trend_clusters t on t.id = tce.cluster_id and t.status = 'active'
+           where tce.entity_id = any(%s)""", ([p["id"] for p in products],)).fetchall()]
+    return "\n".join(lines), cluster_ids
 
 
 def log_reported(conn, cluster_ids: list[int], target_date: date | None = None) -> None:

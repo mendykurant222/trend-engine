@@ -32,8 +32,12 @@ EXTRACTION_SCHEMA = {
                                 "name": {"type": "string",
                                          "description": "canonical English name, lowercase, singular"},
                                 "category": {"type": "string"},
+                                "kind": {"type": "string",
+                                         "enum": ["product", "service", "media",
+                                                  "company", "concept", "other"],
+                                         "description": "product = a physical thing a shop could stock and sell"},
                             },
-                            "required": ["name", "category"],
+                            "required": ["name", "category", "kind"],
                             "additionalProperties": False,
                         },
                     },
@@ -56,6 +60,13 @@ Rules:
 - NEVER return a public corporation or mega-brand by itself ("apple", "tesla", "meta", \
 "nike", "walmart") — corporations are not consumer trends. A specific product, model, or \
 line IS valid ("tesla model y", "nike vaporfly", "apple vision pro").
+- kind: use "product" ONLY for a physical thing a shop could stock and sell \
+("levoit air purifier", "owala freesip", "dubai chocolate", "play doh"). \
+Use "service" for subscriptions/apps/platforms ("amazon prime", "apple music"), \
+"media" for games/films/shows/characters ("marvel rivals", "naruto", "toy story"), \
+"company" for chains and firms ("popeyes", "7-eleven"), "concept" for techniques, \
+routines or categories that are not a specific buyable item ("double cleansing", \
+"whitening", "humanoid robot"), "other" for anything else.
 - canonical name: English, lowercase, singular, no brand suffixes like "tm".
 - category: one of consumer-products, gaming, fashion, home, gadgets, food-beverage, wellness, toys.
 - A text with no specific product/brand/trend mentions gets an empty mentions list.
@@ -97,7 +108,33 @@ def _fuzzy_candidate(conn, alias: str):
     ).fetchone()
 
 
-def resolve_mention(conn, name: str, category: str | None, run_id: int | None = None) -> int | None:
+def product_url(conn, name: str) -> str | None:
+    """A link a human can click: the actual Amazon product page when one of our
+    collected best-sellers is clearly the same item, else an Amazon search.
+
+    Trigram similarity is useless here — product titles are long marketing
+    strings ("LEVOIT Air Purifiers for Bedroom Home, AHAM VERIFIDE, ...") and a
+    short name scores low against them. Word containment is the honest test.
+    """
+    from urllib.parse import quote_plus
+
+    words = [w for w in name.lower().split() if len(w) > 2]
+    if words:
+        rows = conn.execute(
+            "select asin, lower(title) from asin_titles where lower(title) like %s",
+            (f"%{words[0]}%",)).fetchall()
+        best, best_hits = None, 0
+        for asin, title in rows:
+            hits = sum(1 for w in words if w in title)
+            if hits > best_hits:
+                best, best_hits = asin, hits
+        if best and best_hits >= max(1, len(words) - 1):
+            return f"https://www.amazon.com/dp/{best}"
+    return f"https://www.amazon.com/s?k={quote_plus(name)}"
+
+
+def resolve_mention(conn, name: str, category: str | None, run_id: int | None = None,
+                    kind: str | None = None) -> int | None:
     """Alias -> entity_id. Exact match first, then trigram-fuzzy (auto-merge
     above 0.75 similarity, Haiku verdict between 0.55-0.75), else a new
     entity. Returns None for evergreen noise."""
@@ -134,11 +171,15 @@ def resolve_mention(conn, name: str, category: str | None, run_id: int | None = 
             return eid
 
     row = conn.execute(
-        """insert into entities (canonical_name, category)
-           values (%s, %s)
-           on conflict (canonical_name) do update set category = coalesce(entities.category, excluded.category)
+        """insert into entities (canonical_name, category, kind, product_url)
+           values (%s, %s, %s, %s)
+           on conflict (canonical_name) do update
+             set category = coalesce(entities.category, excluded.category),
+                 kind = coalesce(entities.kind, excluded.kind),
+                 product_url = coalesce(entities.product_url, excluded.product_url)
            returning id""",
-        (alias, category),
+        (alias, category, kind,
+         product_url(conn, alias) if kind == "product" else None),
     ).fetchone()
     entity_id = row[0]
     conn.execute(
@@ -220,7 +261,8 @@ def run_extraction(conn, run_id: int | None, limit: int = 500) -> dict:
                 continue
             raw_item_id = batch[idx][0]
             for mention in item.get("mentions", []):
-                entity_id = resolve_mention(conn, mention["name"], mention.get("category"), run_id)
+                entity_id = resolve_mention(conn, mention["name"], mention.get("category"),
+                                            run_id, mention.get("kind"))
                 if entity_id is None:
                     continue
                 link(conn, raw_item_id, entity_id)

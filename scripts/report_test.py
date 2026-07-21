@@ -47,8 +47,10 @@ def seed(conn):
 
     def entity(name, cat):
         eid = conn.execute(
-            "insert into entities (canonical_name, category, first_seen) values (%s, %s, %s) returning id",
-            (name, cat, TODAY - timedelta(days=20))).fetchone()[0]
+            """insert into entities (canonical_name, category, first_seen, kind, product_url)
+               values (%s, %s, %s, 'product', %s) returning id""",
+            (name, cat, TODAY - timedelta(days=20),
+             f"https://www.amazon.com/s?k={name.replace(' ', '+')}")).fetchone()[0]
         ids["entities"].append(eid)
         return eid
 
@@ -74,8 +76,9 @@ def seed(conn):
         """Week-over-week growth so the demo trends earn real momentum —
         the report ranks by momentum now, not by strength."""
         for days_ago in range(14):
-            value = base * (3 if days_ago < 7 else 1)     # this week 3x last week
-            for source in ("_synthetic", "_synthetic2"):
+            value = base * (10 if days_ago < 7 else 1)    # this week 10x last week
+            # real source names: the report only shows sources a human knows
+            for source in ("tiktok", "reddit"):
                 conn.execute(
                     """insert into daily_signals (entity_id, source, signal_date, metric, value)
                        values (%s, %s, %s, 'mentions', %s)
@@ -125,18 +128,21 @@ def main() -> int:
         wide = {**config, "reports": {**config.get("reports", {}), "daily_top_n": 50}}
         daily, reported = build_daily_report(conn, wide)
         print(daily, "\n")
-        for needle, label in [("demo: solar pool lighting", "top trend"),
-                              ("POOL", "ticker"), ("★", "material mark"),
-                              ("Fastest-rising", "momentum summary line"),
-                              ("momentum ", "momentum score"),
-                              ("wow", "week-over-week growth"),
-                              ("/trend/", "dashboard deep link"),
-                              ("day 16", "trend age")]:
+        # the report is written for a non-technical reader: products, plain
+        # language, proof, and a link — no jargon, no tickers
+        for needle, label in [("Products picking up speed", "product-first headline"),
+                              ("Seen on:", "sources line"),
+                              ("Why it looks early:", "plain-language proof"),
+                              ("See the product", "product link"),
+                              ("mentions", "human growth phrasing"),
+                              ("amazon.com", "shoppable link")]:
             if needle not in daily:
                 failures.append(f"daily report missing {label} ({needle!r})")
-        # real trends coexist with the demo ones — assert containment, not count
-        if not set(ids["clusters"]).issubset(set(reported)):
-            failures.append(f"demo trends missing from report: {ids['clusters']} vs {reported}")
+        for jargon in ("momentum ", "strength ", "confidence ", "anomal"):
+            if jargon in daily:
+                failures.append(f"daily report leaks jargon: {jargon!r}")
+        if "Demo Pool Lamp" not in daily:
+            failures.append("demo product missing from report")
         log_reported(conn, reported)
 
         alerts = check_alerts(conn, config)

@@ -22,6 +22,11 @@
 <div class="card">
   <form class="filters" method="get" id="f">
     <label>Search <input name="q" value="{{ q }}" placeholder="entity name"></label>
+    <label>Show
+      <select name="kind" onchange="f.submit()">
+        {% for k, lbl in [('product','🛍 products only'),('','everything'),('service','services'),('media','games & media'),('company','companies'),('concept','concepts')] %}
+          <option value="{{ k }}" {{ 'selected' if args.get('kind', 'product')==k }}>{{ lbl }}</option>{% endfor %}
+      </select></label>
     <label>Category
       <select name="category" onchange="f.submit()">
         <option value="">all</option>
@@ -65,7 +70,8 @@
       <td><b>{{ e.name }}</b>
         {% if e.phase == 'climbing' %}<span class="chip" style="--sc:#0E7C66">🌱 climbing</span>
         {% elif e.phase == 'past-peak' %}<span class="chip" style="--sc:#9AA7AB">🏔 past peak</span>{% endif %}
-        <br><span class="muted small">{{ e.category or '—' }}</span></td>
+        <br><span class="muted small">{{ e.category or '—' }}
+        {%- if e.product_url %} · <a href="{{ e.product_url }}" target="_blank" rel="noopener">🛒 see product</a>{% endif %}</span></td>
       <td class="mono small">{{ e.first_seen }}</td>
       <td class="mono">{{ '%.0f' % e.m14 }}</td>
       <td class="mono">

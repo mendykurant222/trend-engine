@@ -471,6 +471,8 @@ const ITEMS = [
     note:"Root cause confirmed in data — 5 of the top 10 by volume were DECLINING (humanoid robot −64%, apple music −74%). Reports + dashboard now rank by a momentum score (rate of change, log-scaled, damped for tiny bases and weighted by multi-source agreement). New top-5 surfaces levoit air purifier +1489%, sparkling ice +1142%, water bottle craze +596% instead of 'wuwa hype'" },
   { n:80, p:8, t:"Fix: alert channel was silent since launch", d:"Found while testing item 79 — no alert had ever fired", s:"tested",
     note:"new_entity anomalies require 2+ sources by construction but were never FLAGGED cross-source, and cross-source is the alert trigger. In early weeks new_entity is the only anomaly type that can fire (surges need baselines), so the channel stayed silent. Flag added + 187 existing rows backfilled → 5 real alerts fired today (buzz lightyear action figure, the ordinary skincare). Alert text now renders each anomaly type correctly" },
+  { n:81, p:8, t:"Product-first daily message", d:"Mendy 21.07: 'Amazon Prime doesn't help — I want products, a link to the product, and proof it's a developing trend, in language anyone understands'", s:"tested",
+    note:"Entities are now classified product / service / media / company / concept (Claude at extraction + 205 backfilled: 167 products, 38 filtered out). The daily message shows ONLY products, each with: plain-English growth ('exploded 16× this week, 9 → 143 mentions'), where it was seen, a real quote as proof, why it looks early, and a shoppable Amazon link (89 resolve to the exact product page, rest to a search). Dashboard defaults to products-only with 🛒 links. Report test now fails if jargon leaks in" },
 ];
 
 let filter = null;
